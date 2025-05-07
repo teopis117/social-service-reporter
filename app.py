@@ -1,13 +1,13 @@
-from flask import Flask, render_template, request 
-# Eliminado jsonify porque no lo usamos en esta fase
-# Eliminado send_from_directory porque no servimos archivos individuales aún (solo via static)
+from flask import Flask, render_template, request, jsonify, send_from_directory, abort
 from pathlib import Path
 import datetime
-# Importar Babel para formato de fechas
 from babel.dates import format_date as babel_format_date
-import locale # Para asegurar locale español si Babel no lo toma por defecto
+import locale
+import uuid # Para nombres de archivo únicos
+from weasyprint import HTML, CSS # Importar WeasyPrint
+import os # Para eliminar archivos temporales
 
-# Intentar establecer locale en español (puede depender del sistema operativo)
+# --- Configuración de Locale (igual que antes) ---
 try:
     locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8') 
 except locale.Error:
@@ -18,80 +18,56 @@ except locale.Error:
 
 app = Flask(__name__)
 
-# Configuración básica
+# --- Configuración de Rutas (igual que antes, asegurando que BASE_DIR funcione) ---
 BASE_DIR = Path(__file__).resolve().parent
+STATIC_FOLDER = BASE_DIR / 'static'
+TEMP_PDF_FOLDER_NAME = 'temp_pdf' # Carpeta para PDFs temporales
+TEMP_PDF_FOLDER = STATIC_FOLDER / TEMP_PDF_FOLDER_NAME
 
-# --- Filtros Jinja2 para Formatear Fechas ---
+# Crear carpeta de PDFs temporales si no existe
+TEMP_PDF_FOLDER.mkdir(parents=True, exist_ok=True)
+
+# --- Filtros Jinja2 (igual que antes) ---
 def format_date_filter(value):
-    """Formatea fecha a '10 de junio de 2024'."""
     if not value: return ""
     try:
-        if isinstance(value, str):
-            date_obj = datetime.datetime.strptime(value, '%Y-%m-%d').date()
-        elif isinstance(value, datetime.date):
-            date_obj = value
-        else:
-            return value 
-        return babel_format_date(date_obj, format='long', locale='es') # Usar 'es' general
-    except (ValueError, TypeError):
-        return value # Devolver sin cambios si hay error
+        if isinstance(value, str): date_obj = datetime.datetime.strptime(value, '%Y-%m-%d').date()
+        elif isinstance(value, datetime.date): date_obj = value
+        else: return value 
+        return babel_format_date(date_obj, format='long', locale='es')
+    except (ValueError, TypeError): return value
 
 def format_date_short_filter(value):
-    """Formatea fecha a '13/mayo/2024'."""
-    if not value: return ""
-    try:
-        if isinstance(value, str):
-            date_obj = datetime.datetime.strptime(value, '%Y-%m-%d').date()
-        elif isinstance(value, datetime.date):
-            date_obj = value
-        else:
-            return value
-        # Formato día/mes(texto)/año
+     if not value: return ""
+     try:
+        if isinstance(value, str): date_obj = datetime.datetime.strptime(value, '%Y-%m-%d').date()
+        elif isinstance(value, datetime.date): date_obj = value
+        else: return value
         month_name = babel_format_date(date_obj, format='MMMM', locale='es').lower()
         return f"{date_obj.day}/{month_name}/{date_obj.year}"
-    except (ValueError, TypeError):
-        return value
+     except (ValueError, TypeError): return value
 
-# Registrar los filtros con Jinja2
 app.jinja_env.filters['format_date'] = format_date_filter
 app.jinja_env.filters['format_date_short'] = format_date_short_filter
 
-# --- Rutas de la Aplicación ---
+# --- Rutas ---
 
-# Ruta para mostrar el formulario de entrada de datos
 @app.route('/', methods=['GET'])
 def show_input_form():
     today_date = datetime.date.today().strftime('%Y-%m-%d') 
-    # Datos por defecto para el formulario
-    default_data = {
-        'report_date': today_date,
-        'report_date_city': "Ciudad de México",
-        # Precargar datos del estudiante como ejemplo
-        'student_name': "Peña Atanasio Alberto", 
-        'student_boleta': "2020630367",
-        'student_program': "Sistemas Computacionales",
-        'student_semester': "Egresado",
-        'student_email': "apenaa1600@alumno.ipn.mx",
-        'student_phone': "5511353956",
-        'prestatario_name': "Escuela Superior de Ingeniería Textil",
-        'authorizing_name': "M. en A. Shamash Frias Osorio",
-        'authorizing_title': "Jefe de la unidad de informática",
-        'previous_hours': 0 # Empezar con 0 horas acumuladas previas
-    }
+    default_data = { 'report_date': today_date, 'report_date_city': "Ciudad de México" }
+    # Datos del estudiante, etc., se cargarán con JS desde localStorage ahora
     return render_template('input_form.html', 
                            page_title="Registro de Horas de Servicio Social", 
                            data=default_data)
 
-# Ruta para manejar el envío del formulario y mostrar la vista previa
-@app.route('/preview', methods=['POST'])
-def generate_preview():
-    # Recoger todos los datos del formulario
+# --- RUTA MODIFICADA: Ahora genera PDF y devuelve info para descarga ---
+@app.route('/generate', methods=['POST'])
+def generate_report_pdf():
     form_data = request.form.to_dict(flat=False) 
     
-    # Procesar los datos (limpiar, calcular totales)
-    preview_data = {} # Diccionario para pasar a la plantilla
-    
-    # Copiar datos directos del formulario
+    # --- Procesamiento de datos (igual que en /preview antes) ---
+    preview_data = {} 
     direct_copy_keys = [
         'report_num', 'period_start', 'period_end', 'report_date_city', 'report_date',
         'student_name', 'student_boleta', 'student_semester', 'student_program',
@@ -99,10 +75,8 @@ def generate_preview():
         'authorizing_name', 'authorizing_title', 'previous_hours'
     ]
     for key in direct_copy_keys:
-        # .get(key, [''])[0] toma el primer valor de la lista o '' si no existe
         preview_data[key] = form_data.get(key, [''])[0] 
 
-    # Procesar horas diarias
     daily_logs = []
     total_month_hours = 0
     if 'log_date[]' in form_data:
@@ -113,55 +87,108 @@ def generate_preview():
                 start = form_data.get('log_start_time[]', [])[i]
                 end = form_data.get('log_end_time[]', [])[i]
                 
-                if date and start and end: # Solo procesar si todos los campos tienen valor
+                if date and start and end:
                     start_dt = datetime.datetime.strptime(start, '%H:%M')
                     end_dt = datetime.datetime.strptime(end, '%H:%M')
-                    
-                    # Cálculo de horas (manejo simple, podría necesitar ajuste para medianoche)
-                    if end_dt >= start_dt:
-                        duration = end_dt - start_dt
-                    else: # Asumir que termina al día siguiente (poco probable para servicio social)
-                        duration = (datetime.datetime.combine(datetime.date.min, end_dt.time()) + datetime.timedelta(days=1)) - datetime.datetime.combine(datetime.date.min, start_dt.time())
-                    
+                    if end_dt >= start_dt: duration = end_dt - start_dt
+                    else: duration = (datetime.datetime.combine(datetime.date.min, end_dt.time()) + datetime.timedelta(days=1)) - datetime.datetime.combine(datetime.date.min, start_dt.time())
                     hours_today = round(duration.total_seconds() / 3600, 1)
-                    
-                    daily_logs.append({
-                        'num': i + 1,
-                        'date': date,
-                        'start_time': start,
-                        'end_time': end,
-                        'hours_today': hours_today 
-                    })
+                    daily_logs.append({'num': i + 1, 'date': date, 'start_time': start, 'end_time': end, 'hours_today': hours_today })
                     total_month_hours += hours_today
-            except Exception as e:
-                print(f"Advertencia: Error procesando fila de hora {i} (Fecha: {date}, Inicio: {start}, Fin: {end}). Error: {e}")
-                # Omitir fila con error
+            except Exception as e: print(f"Advertencia: Error procesando fila de hora {i}: {e}")
 
     preview_data['daily_logs'] = daily_logs
     preview_data['total_month_hours'] = round(total_month_hours, 1)
-
-    # Calcular horas acumuladas
-    try:
-        previous_hours_float = float(preview_data.get('previous_hours', 0))
-    except ValueError:
-        previous_hours_float = 0 # Default a 0 si no es un número válido
-        
+    try: previous_hours_float = float(preview_data.get('previous_hours', 0))
+    except ValueError: previous_hours_float = 0
     accumulated_hours = previous_hours_float + total_month_hours
     preview_data['accumulated_hours'] = round(accumulated_hours, 1)
+    # --- Fin procesamiento de datos ---
 
-    # Renderizar la plantilla de vista previa con los datos procesados
-    return render_template('report_preview.html', 
-                           page_title="Vista Previa del Reporte", 
-                           data=preview_data)
+    try:
+        # 1. Renderizar la plantilla HTML con los datos
+        # Usaremos 'report_preview.html' como plantilla para el PDF
+        html_out = render_template('report_preview.html', data=preview_data)
 
-# Función para obtener el año actual (para el footer)
+        # 2. Generar el PDF usando WeasyPrint
+        # Crear un nombre de archivo único para el PDF temporal
+        pdf_filename = f"reporte_ss_{preview_data.get('student_boleta','temp')}_{uuid.uuid4().hex[:8]}.pdf"
+        pdf_path = TEMP_PDF_FOLDER / pdf_filename
+        
+        # Añadir CSS para WeasyPrint (puede ser el mismo u otro específico)
+        # WeasyPrint puede usar la etiqueta <link> en el HTML o puedes pasarle CSS
+        css_path = STATIC_FOLDER / 'css' / 'style.css' # Usaremos el CSS principal
+        css_string = CSS(filename=css_path) if css_path.exists() else None
+        
+        # Crear el objeto HTML de WeasyPrint
+        # base_url es importante para que WeasyPrint encuentre archivos estáticos (como logos)
+        html = HTML(string=html_out, base_url=str(BASE_DIR))
+        
+        # Escribir el PDF
+        html.write_pdf(str(pdf_path), stylesheets=[css_string] if css_string else [])
+        print(f"INFO (generate_report_pdf): PDF generado temporalmente en '{pdf_path}'")
+
+        # 3. Devolver una respuesta JSON indicando éxito y el nombre del archivo
+        return jsonify({
+            "success": True,
+            # Devolvemos una ruta relativa a 'static' para que el JS pueda construir la URL de descarga
+            "pdf_filename": f"{TEMP_PDF_FOLDER_NAME}/{pdf_filename}" 
+        })
+
+    except Exception as e:
+        print(f"ERROR (generate_report_pdf): Error generando PDF: {e}")
+        import traceback
+        traceback.print_exc() # Imprimir traza completa del error en el log del servidor
+        return jsonify({"success": False, "error": f"Error interno al generar el PDF: {e}"}), 500
+
+# --- NUEVA RUTA: Para descargar el PDF temporal generado ---
+@app.route(f'/download_pdf/<path:filename>', methods=['GET'])
+def download_pdf(filename):
+    # Construir la ruta completa al archivo PDF temporal
+    # ¡Importante! Validar 'filename' para evitar Path Traversal Attacks si fuera necesario
+    # En este caso, confiamos en que viene de nuestra respuesta JSON anterior.
+    # TEMP_PDF_FOLDER ya es una ruta absoluta segura.
+    safe_path = TEMP_PDF_FOLDER.resolve() # Asegurar ruta absoluta
+    file_path = safe_path / Path(filename).name # Tomar solo el nombre base del archivo
+    
+    # Verificar que el archivo solicitado esté dentro de nuestra carpeta segura
+    if not file_path.is_file() or file_path.parent != safe_path:
+         abort(404, description="Archivo no encontrado o acceso denegado.")
+
+    try:
+        # Enviar el archivo como descarga
+        response = send_from_directory(directory=str(safe_path), 
+                                       path=file_path.name, 
+                                       as_attachment=True)
+        
+        # --- Opcional: Eliminar el archivo después de enviarlo ---
+        # Esto requiere un poco más de cuidado, Flask lo envía en streaming.
+        # Se puede usar un 'after_this_request' decorator.
+        @response.call_on_close
+        def remove_file_after_request():
+            try:
+                os.remove(file_path)
+                print(f"INFO (download_pdf): Archivo temporal eliminado: {file_path.name}")
+            except OSError as e:
+                print(f"ERROR (download_pdf): No se pudo eliminar el archivo temporal {file_path.name}: {e}")
+        # -----------------------------------------------------
+
+        return response
+        
+    except FileNotFoundError:
+        abort(404, description="Archivo PDF temporal no encontrado.")
+    except Exception as e:
+         print(f"ERROR (download_pdf): Error enviando archivo {filename}: {e}")
+         abort(500, description="Error interno al enviar el archivo PDF.")
+
+# Context processor para el año (igual que antes)
 @app.context_processor
 def inject_now():
     return {'now': datetime.datetime.utcnow}
 
 if __name__ == '__main__':
     print("Iniciando servidor Flask para el generador de reportes...")
+    print(f"Directorio base: {BASE_DIR}")
+    print(f"Carpeta de PDFs temporales: {TEMP_PDF_FOLDER}")
     print("Accede al formulario en http://localhost:5000")
-    # host='0.0.0.0' permite acceso desde otras máquinas en la red
-    # debug=True recarga automáticamente el servidor cuando cambias el código Python
     app.run(host='0.0.0.0', port=5000, debug=True)
