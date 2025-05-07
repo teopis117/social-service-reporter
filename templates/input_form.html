@@ -1,0 +1,157 @@
+{% extends "base_layout.html" %} {# Hereda de la plantilla base #}
+
+{% block content %}
+<header class="text-center mb-5">
+    <h1 class="display-6 fw-bold">Generador de Reporte de Servicio Social</h1>
+    <p class="lead text-secondary">Completa la información para generar tu reporte mensual y control de asistencia.</p>
+</header>
+
+{# El action apunta a la ruta /preview #}
+<form action="{{ url_for('generate_preview') }}" method="POST" id="report-form">
+    
+    {# Tarjeta para Información del Reporte #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>Información del Reporte</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="report_num" class="form-label">Número de Reporte:</label>
+                    <input type="number" class="form-control" id="report_num" name="report_num" min="1" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="period_start" class="form-label">Inicio del Periodo:</label>
+                    <input type="date" class="form-control" id="period_start" name="period_start" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="period_end" class="form-label">Fin del Periodo:</label>
+                    <input type="date" class="form-control" id="period_end" name="period_end" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="report_date_city" class="form-label">Ciudad:</label>
+                    <input type="text" class="form-control" id="report_date_city" name="report_date_city" value="{{ data.get('report_date_city', 'Ciudad de México') }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="report_date" class="form-label">Fecha del Reporte:</label>
+                    <input type="date" class="form-control" id="report_date" name="report_date" value="{{ data.get('report_date', '') }}" required>
+                </div>
+                 <div class="col-md-12">
+                    <label for="previous_hours" class="form-label">Total de Horas Acumuladas (Previas a este reporte):</label>
+                    <input type="number" class="form-control" id="previous_hours" name="previous_hours" min="0" step="0.1" value="{{ data.get('previous_hours', 0) }}" required>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tarjeta para Datos del Prestador #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Datos del Prestador</h5>
+        </div>
+        <div class="card-body p-4">
+             <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="student_name" class="form-label">Nombre Completo:</label>
+                    <input type="text" class="form-control" id="student_name" name="student_name" value="{{ data.get('student_name', '') }}" required>
+                </div>
+                 <div class="col-md-6">
+                    <label for="student_boleta" class="form-label">Boleta:</label>
+                    <input type="text" class="form-control" id="student_boleta" name="student_boleta" value="{{ data.get('student_boleta', '') }}" required>
+                </div>
+                 <div class="col-md-6">
+                    <label for="student_program" class="form-label">Programa Académico:</label>
+                    <input type="text" class="form-control" id="student_program" name="student_program" value="{{ data.get('student_program', '') }}" required>
+                </div>
+                 <div class="col-md-6">
+                    <label for="student_semester" class="form-label">Semestre:</label>
+                    <input type="text" class="form-control" id="student_semester" name="student_semester" value="{{ data.get('student_semester', '') }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="student_email" class="form-label">Correo Electrónico:</label>
+                    <input type="email" class="form-control" id="student_email" name="student_email" value="{{ data.get('student_email', '') }}" required>
+                </div>
+                 <div class="col-md-6">
+                    <label for="student_phone" class="form-label">Teléfono:</label>
+                    <input type="tel" class="form-control" id="student_phone" name="student_phone" value="{{ data.get('student_phone', '') }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tarjeta para Datos del Prestatario #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-dark">
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Datos del Prestatario y Autorización</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                 <div class="col-12">
+                    <label for="prestatario_name" class="form-label">Nombre del Prestatario (Dependencia):</label>
+                    <input type="text" class="form-control" id="prestatario_name" name="prestatario_name" value="{{ data.get('prestatario_name', '') }}" required>
+                 </div>
+                 <div class="col-md-6">
+                    <label for="authorizing_name" class="form-label">Nombre de quien Autoriza:</label>
+                    <input type="text" class="form-control" id="authorizing_name" name="authorizing_name" value="{{ data.get('authorizing_name', '') }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="authorizing_title" class="form-label">Cargo de quien Autoriza:</label>
+                    <input type="text" class="form-control" id="authorizing_title" name="authorizing_title" value="{{ data.get('authorizing_title', '') }}" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Tarjeta para Actividades Realizadas #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Actividades Realizadas</h5>
+        </div>
+        <div class="card-body p-4">
+            <label for="activities_description" class="form-label">Describe brevemente las actividades realizadas en el periodo:</label>
+            <textarea class="form-control" id="activities_description" name="activities_description" rows="5" required></textarea>
+        </div>
+    </div>
+
+    {# Tarjeta para Registro de Horas Diarias #}
+     <div class="card shadow-sm mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Registro de Horas Diarias</h5>
+        </div>
+        <div class="card-body p-4">
+            <div id="daily-log-entries">
+                <div class="row g-3 align-items-end mb-3 daily-log-row">
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label small">Fecha:</label>
+                        <input type="date" class="form-control form-control-sm" name="log_date[]" required>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label small">Hora Entrada:</label>
+                        <input type="time" class="form-control form-control-sm" name="log_start_time[]" required>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label class="form-label small">Hora Salida:</label>
+                        <input type="time" class="form-control form-control-sm" name="log_end_time[]" required>
+                    </div>
+                    <div class="col-md-3 col-sm-6 text-md-end mt-3 mt-md-0">
+                        <button type="button" class="btn btn-danger btn-sm remove-log-row" style="display: none;"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="add-log-row" class="btn btn-secondary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i> Añadir Fila</button>
+        </div>
+    </div>
+
+    {# Botón de Envío Final #}
+    <div class="text-center mt-5 mb-4">
+        <button type="submit" class="btn btn-lg btn-success px-5 py-3">
+            <i class="bi bi-eye me-2"></i>Generar Vista Previa del Reporte
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts_extra %}
+    {# El script principal 'script.js' se carga desde base_layout #}
+    {# Aquí podríamos poner JS específico solo para esta página si fuera necesario #}
+{% endblock %}

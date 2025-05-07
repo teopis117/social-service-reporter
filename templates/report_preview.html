@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - ESIT IPN</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    {# Podríamos tener un CSS específico para impresión/preview aquí #}
+    <style>
+        /* Estilos básicos para simular el formato PDF en pantalla */
+        body { background-color: #e0e0e0; margin: 0; padding: 20px 0; font-family: Arial, sans-serif; }
+        .page-container { /* Contenedor para centrar la página */
+            display: flex;
+            justify-content: center;
+        }
+        .page {
+            width: 210mm; /* Ancho A4 */
+            min-height: 297mm; /* Alto A4 - ajusta según necesites */
+            padding: 15mm 18mm; /* Márgenes simulados */
+            margin: 1cm 0; /* Margen arriba/abajo */
+            border: 1px #D3D3D3 solid;
+            background: white;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            font-size: 11pt; 
+            line-height: 1.4;
+            position: relative; /* Para elementos posicionados si los hubiera */
+        }
+        .page + .page { /* Añadir margen superior si hay más de una página */
+             margin-top: 2cm; 
+        }
+        .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cm; padding-bottom: 10px; border-bottom: 1px solid #555;}
+        .header-logos img { max-height: 60px; }
+        .header-text { text-align: center; font-size: 10pt; line-height: 1.2; margin-bottom: 0.5cm;}
+        .header-text strong { font-size: 11pt; }
+        .report-date-header { text-align: right; margin-bottom: 1cm; font-size: 10pt; }
+        .report-title { text-align: center; font-weight: bold; margin-bottom: 0.5cm; font-size: 12pt;}
+        .period-info { text-align: center; margin-bottom: 1cm; font-size: 10pt;}
+        .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; margin-bottom: 0.5cm; font-size: 10pt; } 
+        .data-grid div { margin-bottom: 0.15cm; }
+        .data-grid strong { display: inline-block; min-width: 130px; } /* Ajustar ancho de etiqueta */
+        .prestatario-info { font-size: 10pt; margin-left: 5px; }
+        .activities { margin-top: 0.5cm; text-align: justify; font-size: 10pt; line-height: 1.5;}
+        .authorization { margin-top: 3cm; text-align: center; font-size: 10pt; }
+        .signature-line { border-top: 1px solid black; width: 70%; margin: 0 auto 5px auto; }
+        .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; } /* Tamaño más pequeño para tabla */
+        .attendance-table th, .attendance-table td { border: 1px solid black; padding: 4px 5px; text-align: center; vertical-align: middle; }
+        .attendance-table th { background-color: #e8e8e8; font-weight: bold; }
+        .attendance-table td { height: 20px; } /* Altura mínima de fila */
+        .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; }
+        .seal-placeholder { 
+            border: 1px dashed #999; 
+            height: 80px; 
+            width: 150px; 
+            margin: 2cm auto 0 auto; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #999;
+            font-size: 9pt;
+        }
+        /* Clases para impresión (cuando generemos PDF) */
+        @media print {
+            body { background-color: white; margin: 0; padding: 0; }
+            .page { margin: 0; border: none; box-shadow: none; border-radius: 0; width: auto; min-height: auto; padding: 15mm 18mm;}
+            .page-container { display: block;}
+            .page-break-before { page-break-before: always; }
+            .page-break-after { page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-container">
+    {# --- PÁGINA 1: REPORTE DE ACTIVIDADES --- #}
+    <div class="page">
+        <div class="header-logos">
+            <img src="{{ url_for('static', filename='images/logo_ipn.png') }}" alt="Logo IPN"> 
+            <img src="{{ url_for('static', filename='images/logo_escom.png') }}" alt="Logo ESCOM"> {# O ESIT #}
+        </div>
+        <div class="header-text">
+            <strong>Instituto Politécnico Nacional</strong><br>
+            ESCUELA SUPERIOR DE CÓMPUTO<br> {# Ajusta a ESIT si aplica #}
+            SUBDIRECCIÓN DE SERVICIOS EDUCATIVOS E INTEGRACIÓN SOCIAL<br>
+            Departamento de Extensión y Apoyos Educativos.
+        </div>
+
+        <div class="report-date-header">
+            {{ data.report_date_city }}, a {{ data.report_date | format_date }}
+        </div>
+
+        <div class="report-title">
+            REPORTE MENSUAL DE ACTIVIDADES No. {{ data.report_num }}
+        </div>
+        <div class="period-info">
+            Correspondiente al periodo del {{ data.period_start | format_date }} al {{ data.period_end | format_date }}
+        </div>
+
+        <div class="section-title">Datos del Prestador</div>
+        <div class="data-grid">
+            <div><strong>Nombre:</strong> {{ data.student_name }}</div>
+            <div><strong>Programa Académico:</strong> {{ data.student_program }}</div>
+            <div><strong>Boleta:</strong> {{ data.student_boleta }}</div>
+            <div><strong>Teléfono Particular:</strong> {{ data.student_phone }}</div>
+            <div><strong>Semestre:</strong> {{ data.student_semester }}</div>
+            <div>&nbsp;</div> {# Espacio en blanco #}
+            <div style="grid-column: 1 / -1;"><strong>Correo electrónico:</strong> {{ data.student_email }}</div> {# Ocupar ambas columnas #}
+        </div>
+        
+        <div class="section-title">Prestatario</div>
+        <div class="prestatario-info">{{ data.prestatario_name }}</div>
+
+        <div class="section-title">Actividades Realizadas.</div>
+        <div class="activities">
+            {# Usar <pre> para mantener saltos de línea y espacios del textarea #}
+            <pre style="white-space: pre-wrap; font-family: inherit;">{{ data.activities_description }}</pre> 
+        </div>
+
+        <div class="authorization">
+            Autorizó
+            <div style="margin-top: 1.5cm;">
+                <div class="signature-line"></div>
+                {{ data.authorizing_name }}<br>
+                {{ data.authorizing_title }}
+            </div>
+        </div>
+
+        <div class="seal-placeholder">
+            Sello de Prestatario
+        </div>
+    </div>
+
+    {# --- PÁGINA 2: CONTROL DE ASISTENCIA --- #}
+    {# Usamos page-break-after en el div anterior o page-break-before aquí para la impresión PDF #}
+    <div class="page page-break-before"> 
+         <div class="header-logos">
+             <img src="{{ url_for('static', filename='images/logo_ipn.png') }}" alt="Logo IPN"> 
+             <img src="{{ url_for('static', filename='images/logo_escom.png') }}" alt="Logo ESCOM"> {# O ESIT #}
+        </div>
+         <div class="header-text">
+            <strong>Instituto Politécnico Nacional</strong><br>
+            ESCUELA SUPERIOR DE CÓMPUTO<br> {# O ESIT #}
+            SUBDIRECCIÓN DE SERVICIOS EDUCATIVOS E INTEGRACIÓN SOCIAL<br>
+            Departamento de Extensión y Apoyos Educativos.
+        </div>
+
+        <div class="report-title">
+            CONTROL DE ASISTENCIA
+        </div>
+         <div class="period-info">
+            Correspondiente al reporte mensual de actividades No. {{ data.report_num }}<br>
+            Periodo del {{ data.period_start | format_date }} al {{ data.period_end | format_date }}
+        </div>
+
+        <div class="data-grid" style="margin-bottom: 1cm;"> {# Más margen inferior antes de la tabla #}
+             <div style="grid-column: 1 / -1;"><strong>Nombre del prestador:</strong> {{ data.student_name }}</div>
+             <div style="grid-column: 1 / -1;"><strong>Programa Académico:</strong> {{ data.student_program }}</div>
+             <div style="grid-column: 1 / -1;"><strong>Boleta:</strong> {{ data.student_boleta }}</div>
+        </div>
+
+        <table class="attendance-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No.</th>
+                    <th style="width: 25%;">FECHA</th>
+                    <th style="width: 15%;">HORA DE ENTRADA</th>
+                    <th style="width: 15%;">HORA DE SALIDA</th>
+                    <th style="width: 15%;">HORAS POR DÍA</th>
+                    <th style="width: 25%;">FIRMA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set row_count = data.daily_logs | length %}
+                {% for log in data.daily_logs %}
+                <tr>
+                    <td>{{ loop.index }}</td> {# Usar loop.index para numeración consecutiva #}
+                    <td>{{ log.date | format_date_short }}</td> 
+                    <td>{{ log.start_time }}</td>
+                    <td>{{ log.end_time }}</td>
+                    <td>{{ log.hours_today if log.hours_today > 0 else '' }}</td> {# Mostrar solo si > 0 #}
+                    <td></td> {# Columna de firma vacía #}
+                </tr>
+                {% endfor %}
+                {# Rellenar filas vacías hasta 24 #}
+                {% for i in range(row_count + 1, 25) %}
+                 <tr>
+                    <td>{{ i }}</td>
+                    <td>&nbsp;</td> {# Espacio en blanco HTML #}
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                 </tr>
+                 {% endfor %}
+                 {# Filas de totales #}
+                 <tr>
+                     <td colspan="4" style="text-align: right; font-weight: bold; border-left: none; border-bottom: none;">TOTAL DE HORAS PRESTADAS POR MES</td>
+                     <td style="font-weight: bold;">{{ data.total_month_hours }}</td>
+                     <td style="border-right: none; border-bottom: none;"></td>
+                 </tr>
+                 <tr>
+                     <td colspan="4" style="text-align: right; font-weight: bold; border-left: none; border-bottom: none;">TOTAL DE HORAS PRESTADAS ACUMULADAS</td>
+                     <td style="font-weight: bold;">{{ data.accumulated_hours }}</td>
+                     <td style="border-right: none; border-bottom: none;"></td>
+                 </tr>
+            </tbody>
+        </table>
+
+        <div class="authorization">
+            Autorizó
+            <div style="margin-top: 1.5cm;">
+                <div class="signature-line"></div>
+                 {{ data.authorizing_name }}<br>
+                 {{ data.authorizing_title }}
+            </div>
+        </div>
+
+         <div class="seal-placeholder">
+            Sello de Prestatario
+        </div>
+    </div>
+</div> {# Fin de page-container #}
+
+</body>
+</html>

@@ -1,0 +1,116 @@
+/* static/css/style.css */
+/* Estilos generales para complementar Bootstrap */
+body {
+    padding-top: 56px; /* Altura estándar de la navbar de Bootstrap */
+  }
+  
+  .navbar-brand img {
+    /* Ajusta si tu logo blanco necesita invertir colores o no */
+    /* filter: brightness(0) invert(1); */ 
+  }
+  
+  /* Mejorar espaciado en tarjetas */
+  .card-body {
+      padding: 1.5rem; 
+  }
+  
+  /* Estilos para la tabla de logs en el formulario */
+  #daily-log-entries .daily-log-row:not(:first-child) .remove-log-row {
+      display: inline-block !important; 
+  }
+  #daily-log-entries .daily-log-row:first-child .remove-log-row {
+      display: none; /* Ocultar el botón de eliminar en la primera fila plantilla */
+  }
+  
+  /* ---- Estilos para la VISTA PREVIA (report_preview.html) ---- */
+  /* Mantenemos los estilos específicos para la simulación A4 aquí */
+  /* para no afectar otras páginas que puedan usar Bootstrap */
+  
+  body.report-preview-body { /* Añadir esta clase al body en report_preview.html */
+      background-color: #ccc !important; /* Forzar sobre bg-light de base_layout */
+      margin: 0; 
+      padding: 20px 0; 
+      font-family: Arial, sans-serif; /* Fuente clásica para simular documento */
+      padding-top: 0 !important; /* Sobrescribir el padding de navbar */
+  }
+  
+  body.report-preview-body .navbar, 
+  body.report-preview-body footer {
+      display: none; /* Ocultar navbar y footer en la vista previa */
+  }
+  
+  body.report-preview-body .page-container { 
+      display: block; /* Resetear flex */
+      max-width: initial; /* Resetear max-width del container */
+      padding: 0; /* Resetear padding del container */
+      margin: 0; /* Resetear margin del container */
+  }
+  
+  .page {
+      width: 210mm; 
+      min-height: 290mm; /* Ligeramente menos para evitar saltos extra */
+      padding: 15mm 18mm; 
+      margin: 1cm auto;
+      border: 1px #b0b0b0 solid;
+      background: white;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+      box-sizing: border-box;
+      font-size: 11pt; 
+      line-height: 1.4;
+      position: relative;
+  }
+  .page + .page { 
+       margin-top: 2cm; 
+  }
+  .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cm; padding-bottom: 10px; border-bottom: 1px solid #555;}
+  .header-logos img { max-height: 60px; }
+  .header-text { text-align: center; font-size: 10pt; line-height: 1.2; margin-bottom: 0.5cm;}
+  .header-text strong { font-size: 11pt; }
+  .report-date-header { text-align: right; margin-bottom: 1cm; font-size: 10pt; }
+  .report-title { text-align: center; font-weight: bold; margin-bottom: 0.5cm; font-size: 12pt;}
+  .period-info { text-align: center; margin-bottom: 1cm; font-size: 10pt;}
+  .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; text-transform: uppercase; } /* Mayúsculas como en ejemplo */
+  .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 25px; margin-bottom: 0.5cm; font-size: 10pt; } 
+  .data-grid div { margin-bottom: 0.15cm; }
+  .data-grid strong { display: inline-block; min-width: 130px; font-weight: normal; } /* Etiquetas no en negrita */
+  .prestatario-info { font-size: 10pt; margin-left: 5px; }
+  .activities { margin-top: 0.5cm; text-align: justify; font-size: 10pt; line-height: 1.5;}
+  .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0;} /* Estilo para el <pre> de actividades */
+  .authorization { margin-top: 3cm; text-align: center; font-size: 10pt; }
+  .signature-line { border-top: 1px solid black; width: 70%; margin: 0 auto 5px auto; }
+  .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; }
+  .attendance-table th, .attendance-table td { border: 1px solid black; padding: 4px 5px; text-align: center; vertical-align: middle; }
+  .attendance-table th { background-color: #e8e8e8; font-weight: bold; }
+  .attendance-table td { height: 20px; }
+  .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; border-left: none; border-bottom: none; border-right: none;} /* Quitar bordes en totales */
+  .attendance-table tr:last-child td:first-child, .attendance-table tr:nth-last-child(2) td:first-child { border-left: 1px solid black; } /* Borde izquierdo para la celda combinada */
+  .attendance-table tr:last-child td:nth-child(2), .attendance-table tr:nth-last-child(2) td:nth-child(2) { border-right: 1px solid black;} /* Borde derecho para celda de valor total */
+  
+  .seal-placeholder { 
+      border: 1px dashed #999; 
+      height: 80px; 
+      width: 150px; 
+      margin: 2cm auto 0 auto; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: #999;
+      font-size: 9pt;
+  }
+  
+  /* Clases para impresión (cuando generemos PDF) */
+  @media print {
+      body { background-color: white !important; margin: 0; padding: 0; }
+      .page { margin: 0; border: none; box-shadow: none; border-radius: 0; width: auto; min-height: auto; padding: 15mm 18mm;}
+      .page-container { display: block;}
+      .page-break-before { page-break-before: always; }
+      .page-break-after { page-break-after: always; }
+      .navbar, footer { display: none !important; } /* Ocultar nav/footer al imprimir */
+  }
+  
+  /* Para que report_preview herede del body especial */
+  body.report-preview-body main.container {
+       max-width: none; /* Quitar límite de ancho */
+       padding: 0;
+       margin: 0;
+  }
