@@ -4,171 +4,123 @@
 {# Cabecera de la página #}
 <header class="text-center mb-5">
     <h1 class="display-6 fw-bold">{{ page_title }}</h1>
-    <p class="lead text-secondary">Completa la información para generar tu reporte mensual y control de asistencia.</p>
+    <p class="lead text-secondary">Completa o verifica la información para generar tu reporte mensual.</p>
+    {# Botón Demo Data ya no es necesario aquí si precargamos desde app.py #}
 </header>
 
-{# Formulario principal, envía datos a la ruta /generate vía POST #}
-<form action="{{ url_for('generate_report_pdf') }}" method="POST" id="report-form">
+{# El action apunta a la ruta /generate vía POST, pero será manejado por AJAX #}
+<form id="report-form" method="POST" action="{{ url_for('generate_report_pdf') }}"> {# Aunque usemos AJAX, es buena práctica tener action/method #}
     
     {# --- Tarjeta 1: Información General del Reporte --- #}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Información del Reporte</h5>
-        </div>
-        <div class="card-body p-4">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label for="report_num" class="form-label">Número de Reporte:</label>
-                    {# Campo numérico, requerido #}
-                    <input type="number" class="form-control" id="report_num" name="report_num" min="1" value="{{ data.get('report_num', '') }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="period_start" class="form-label">Inicio del Periodo:</label>
-                    {# Campo de fecha, requerido #}
-                    <input type="date" class="form-control" id="period_start" name="period_start" value="{{ data.get('period_start', '') }}" required>
-                </div>
-                <div class="col-md-4">
-                    <label for="period_end" class="form-label">Fin del Periodo:</label>
-                    <input type="date" class="form-control" id="period_end" name="period_end" value="{{ data.get('period_end', '') }}" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="report_date_city" class="form-label">Ciudad:</label>
-                    {# Campo de texto con valor por defecto #}
-                    <input type="text" class="form-control" id="report_date_city" name="report_date_city" value="{{ data.get('report_date_city', 'Ciudad de México') }}">
-                </div>
-                <div class="col-md-6">
-                    <label for="report_date" class="form-label">Fecha del Reporte:</label>
-                    {# Campo de fecha con valor por defecto (hoy) #}
-                    <input type="date" class="form-control" id="report_date" name="report_date" value="{{ data.get('report_date', '') }}" required>
-                </div>
-                 <div class="col-md-12">
-                    <label for="previous_hours" class="form-label">Total de Horas Acumuladas (Reportadas *antes* de este periodo):</label>
-                    {# Campo numérico para horas previas, requerido, permite decimales #}
-                    <input type="number" class="form-control" id="previous_hours" name="previous_hours" min="0" step="0.1" value="{{ data.get('previous_hours', 0) }}" required>
-                    <div class="form-text">Introduce el total de horas que tenías acumuladas *antes* de iniciar el periodo de este reporte.</div>
-                 </div>
-            </div>
-        </div>
+        <div class="card-header bg-primary text-white"><h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>Información del Reporte</h5></div>
+        <div class="card-body p-4"> <div class="row g-3">
+            <div class="col-md-4"><label for="report_num" class="form-label">Número de Reporte:</label><input type="number" class="form-control" id="report_num" name="report_num" min="1" value="{{ data.get('report_num', '') }}" required></div>
+            <div class="col-md-4"><label for="period_start" class="form-label">Inicio del Periodo:</label><input type="date" class="form-control" id="period_start" name="period_start" value="{{ data.get('period_start', '') }}" required></div>
+            <div class="col-md-4"><label for="period_end" class="form-label">Fin del Periodo:</label><input type="date" class="form-control" id="period_end" name="period_end" value="{{ data.get('period_end', '') }}" required></div>
+            <div class="col-md-6"><label for="report_date_city" class="form-label">Ciudad:</label><input type="text" class="form-control" id="report_date_city" name="report_date_city" value="{{ data.get('report_date_city', 'Ciudad de México') }}"></div>
+            <div class="col-md-6"><label for="report_date" class="form-label">Fecha del Reporte:</label><input type="date" class="form-control" id="report_date" name="report_date" value="{{ data.get('report_date', '') }}" required></div>
+             <div class="col-md-12"><label for="previous_hours" class="form-label">Total de Horas Acumuladas (Previas):</label><input type="number" class="form-control" id="previous_hours" name="previous_hours" min="0" step="0.1" value="{{ data.get('previous_hours', 0) }}" required><div class="form-text">Horas *antes* de iniciar el periodo de este reporte.</div></div>
+        </div></div>
     </div>
 
-    {# --- Tarjeta 2: Datos del Prestador (Estudiante) --- #}
-    {# Estos campos se precargan desde la BD o los defaults de app.py #}
+    {# --- Tarjeta 2: Datos del Prestador --- #}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Datos del Prestador</h5>
-        </div>
-        <div class="card-body p-4">
-             <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="student_name" class="form-label">Nombre Completo:</label>
-                    <input type="text" class="form-control" id="student_name" name="student_name" value="{{ data.get('student_name', '') }}" required>
-                </div>
-                 <div class="col-md-6">
-                    <label for="student_boleta" class="form-label">Boleta:</label>
-                    {# Campo de boleta, importante que coincida con el de la BD si quieres que cargue horas previas #}
-                    <input type="text" class="form-control" id="student_boleta" name="student_boleta" value="{{ data.get('student_boleta', '') }}" required>
-                </div>
-                 <div class="col-md-6">
-                    <label for="student_program" class="form-label">Programa Académico:</label>
-                    <input type="text" class="form-control" id="student_program" name="student_program" value="{{ data.get('student_program', '') }}" required>
-                </div>
-                 <div class="col-md-6">
-                    <label for="student_semester" class="form-label">Semestre:</label>
-                    <input type="text" class="form-control" id="student_semester" name="student_semester" value="{{ data.get('student_semester', '') }}" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="student_email" class="form-label">Correo Electrónico:</label>
-                    <input type="email" class="form-control" id="student_email" name="student_email" value="{{ data.get('student_email', '') }}" required>
-                </div>
-                 <div class="col-md-6">
-                    <label for="student_phone" class="form-label">Teléfono:</label>
-                    {# Teléfono opcional (no 'required') #}
-                    <input type="tel" class="form-control" id="student_phone" name="student_phone" value="{{ data.get('student_phone', '') }}">
-                </div>
-                {# Podríamos añadir un botón 'Guardar mis datos' que haga POST a '/' aquí #}
-                {# <div class="col-12 mt-3 text-end">
-                    <button type="submit" formaction="{{ url_for('show_input_form') }}" formmethod="post" class="btn btn-sm btn-outline-secondary">Guardar mis datos</button>
-                </div> #}
-            </div>
-        </div>
+        <div class="card-header bg-secondary text-white"><h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Datos del Prestador</h5></div>
+        <div class="card-body p-4"><div class="row g-3">
+            <div class="col-md-6"><label for="student_name" class="form-label">Nombre Completo:</label><input type="text" class="form-control" id="student_name" name="student_name" value="{{ data.get('student_name', '') }}" required></div>
+             <div class="col-md-6"><label for="student_boleta" class="form-label">Boleta:</label><input type="text" class="form-control" id="student_boleta" name="student_boleta" value="{{ data.get('student_boleta', '') }}" required></div>
+             <div class="col-md-6"><label for="student_program" class="form-label">Programa Académico:</label><input type="text" class="form-control" id="student_program" name="student_program" value="{{ data.get('student_program', '') }}" required></div>
+             <div class="col-md-6"><label for="student_semester" class="form-label">Semestre:</label><input type="text" class="form-control" id="student_semester" name="student_semester" value="{{ data.get('student_semester', '') }}" required></div>
+            <div class="col-md-6"><label for="student_email" class="form-label">Correo Electrónico:</label><input type="email" class="form-control" id="student_email" name="student_email" value="{{ data.get('student_email', '') }}" required></div>
+             <div class="col-md-6"><label for="student_phone" class="form-label">Teléfono:</label><input type="tel" class="form-control" id="student_phone" name="student_phone" value="{{ data.get('student_phone', '') }}"></div>
+        </div></div>
     </div>
 
     {# --- Tarjeta 3: Datos del Prestatario y Autorización --- #}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-info text-dark">
-            <h5 class="mb-0"><i class="bi bi-building-check me-2"></i>Datos del Prestatario y Autorización</h5>
-        </div>
-        <div class="card-body p-4">
-            <div class="row g-3">
-                 <div class="col-12">
-                    <label for="prestatario_name" class="form-label">Nombre del Prestatario (Dependencia):</label>
-                    <input type="text" class="form-control" id="prestatario_name" name="prestatario_name" value="{{ data.get('prestatario_name', '') }}" required>
-                 </div>
-                 <div class="col-md-6">
-                    <label for="authorizing_name" class="form-label">Nombre de quien Autoriza:</label>
-                    <input type="text" class="form-control" id="authorizing_name" name="authorizing_name" value="{{ data.get('authorizing_name', '') }}" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="authorizing_title" class="form-label">Cargo de quien Autoriza:</label>
-                    <input type="text" class="form-control" id="authorizing_title" name="authorizing_title" value="{{ data.get('authorizing_title', '') }}" required>
-                </div>
-            </div>
-        </div>
-    </div>
+       <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="bi bi-building-check me-2"></i>Datos del Prestatario y Autorización</h5></div>
+       <div class="card-body p-4"><div class="row g-3">
+             <div class="col-12"><label for="prestatario_name" class="form-label">Nombre del Prestatario:</label><input type="text" class="form-control" id="prestatario_name" name="prestatario_name" value="{{ data.get('prestatario_name', '') }}" required></div>
+             <div class="col-md-6"><label for="authorizing_name" class="form-label">Nombre de quien Autoriza:</label><input type="text" class="form-control" id="authorizing_name" name="authorizing_name" value="{{ data.get('authorizing_name', '') }}" required></div>
+            <div class="col-md-6"><label for="authorizing_title" class="form-label">Cargo de quien Autoriza:</label><input type="text" class="form-control" id="authorizing_title" name="authorizing_title" value="{{ data.get('authorizing_title', '') }}" required></div>
+        </div></div>
+   </div>
 
     {# --- Tarjeta 4: Actividades Realizadas --- #}
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Actividades Realizadas</h5>
-        </div>
+        <div class="card-header bg-success text-white"><h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Actividades Realizadas</h5></div>
         <div class="card-body p-4">
-            <label for="activities_description" class="form-label">Describe detalladamente las actividades realizadas en el periodo:</label>
-            {# Textarea para descripciones largas #}
-            <textarea class="form-control" id="activities_description" name="activities_description" rows="6" required></textarea>
+            {# Quitamos selección de tipos, usamos descripción precargada #}
+             <label for="activities_description" class="form-label fw-medium">Describe o edita las actividades realizadas:</label>
+             <textarea class="form-control" id="activities_description" name="activities_description" rows="6" required>{{ data.get('activities_description', '') }}</textarea>
+             {# Quitamos botón de generar sugerencia #}
         </div>
     </div>
 
     {# --- Tarjeta 5: Registro de Horas Diarias --- #}
      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Registro de Horas Diarias</h5>
-        </div>
+        <div class="card-header bg-warning text-dark"><h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Registro de Horas Diarias</h5></div>
         <div class="card-body p-4">
-            {# Contenedor para las filas de horas (el JS añadirá más aquí) #}
             <div id="daily-log-entries">
-                <div class="row g-3 align-items-end mb-3 daily-log-row">
-                    <div class="col-md-3 col-6"> {# Ajuste responsivo #}
-                        <label class="form-label small fw-medium">Fecha:</label>
-                        <input type="date" class="form-control form-control-sm" name="log_date[]" required> {# Marcado como requerido #}
+                
+                {# Bucle para renderizar filas precargadas desde app.py #}
+                {% if data.daily_logs %}
+                    {% for log_entry in data.daily_logs %}
+                    <div class="row g-3 align-items-end mb-3 daily-log-row">
+                        <div class="col-md-3 col-6"><label class="form-label small fw-medium">Fecha:</label><input type="date" class="form-control form-control-sm" name="log_date[]" value="{{ log_entry.date }}" required></div>
+                        <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Entrada:</label><input type="time" class="form-control form-control-sm" name="log_start_time[]" value="{{ log_entry.start_time }}" required></div>
+                        <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Salida:</label><input type="time" class="form-control form-control-sm" name="log_end_time[]" value="{{ log_entry.end_time }}" required></div>
+                        <div class="col-md-3 col-6 text-md-end mt-3 mt-md-0 d-flex justify-content-end align-items-end"><button type="button" class="btn btn-outline-danger btn-sm remove-log-row" title="Eliminar esta fila"><i class="bi bi-trash"></i></button></div>
                     </div>
-                    <div class="col-md-3 col-6">
-                        <label class="form-label small fw-medium">Hora Entrada:</label>
-                        <input type="time" class="form-control form-control-sm" name="log_start_time[]" required> {# Marcado como requerido #}
+                    {% endfor %}
+                {% else %}
+                    {# Mostrar una fila vacía si app.py no envió ninguna #}
+                     <div class="row g-3 align-items-end mb-3 daily-log-row">
+                         <div class="col-md-3 col-6"><label class="form-label small fw-medium">Fecha:</label><input type="date" class="form-control form-control-sm" name="log_date[]" required></div>
+                         <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Entrada:</label><input type="time" class="form-control form-control-sm" name="log_start_time[]" required></div>
+                         <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Salida:</label><input type="time" class="form-control form-control-sm" name="log_end_time[]" required></div>
+                         <div class="col-md-3 col-6 text-md-end mt-3 mt-md-0 d-flex justify-content-end align-items-end"><button type="button" class="btn btn-outline-danger btn-sm remove-log-row" title="Eliminar esta fila" style="display: none;"><i class="bi bi-trash"></i></button></div>
                     </div>
-                    <div class="col-md-3 col-6">
-                        <label class="form-label small fw-medium">Hora Salida:</label>
-                        <input type="time" class="form-control form-control-sm" name="log_end_time[]" required> {# Marcado como requerido #}
-                    </div>
-                    <div class="col-md-3 col-6 text-md-end mt-3 mt-md-0 d-flex justify-content-end align-items-end"> {# Alineación del botón #}
-                        {# El botón de eliminar se maneja con JS #}
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-log-row" title="Eliminar esta fila"><i class="bi bi-trash"></i></button>
-                    </div>
+                {% endif %}
+
+                {# Plantilla oculta para JavaScript #}
+                <div class="row g-3 align-items-end mb-3 daily-log-row" id="log-row-template" style="display: none;">
+                    <div class="col-md-3 col-6"><label class="form-label small fw-medium">Fecha:</label><input type="date" class="form-control form-control-sm" name="log_date[]"></div> 
+                    <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Entrada:</label><input type="time" class="form-control form-control-sm" name="log_start_time[]"></div>
+                    <div class="col-md-3 col-6"><label class="form-label small fw-medium">Hora Salida:</label><input type="time" class="form-control form-control-sm" name="log_end_time[]"></div>
+                    <div class="col-md-3 col-6 text-md-end mt-3 mt-md-0 d-flex justify-content-end align-items-end"><button type="button" class="btn btn-outline-danger btn-sm remove-log-row" title="Eliminar esta fila"><i class="bi bi-trash"></i></button></div>
                 </div>
-                </div>
-            {# Contenedor para el total y el botón de añadir fila #}
+
+            </div>
             <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
-                 {# El span para el total se añadirá aquí por JS #}
-                 <div id="total-hours-container" class="fs-5 fw-medium text-primary">
-                     {# El JS insertará el label y el span aquí #}
-                 </div>
+                 <div id="total-hours-container" class="fs-5 fw-medium text-primary"> {# JS insertará label y span aquí #}</div>
                  <button type="button" id="add-log-row" class="btn btn-secondary btn-sm mt-2 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Añadir Fila</button>
             </div>
         </div>
     </div>
 
-    {# --- Botón Final para Generar PDF (vía AJAX) --- #}
+    {# --- Área de Feedback (Progreso y Errores) --- #}
+    <div id="processing-output-area" class="mt-4 mb-4" style="display:none;">
+        <div id="loading-progress-area" class="mb-3">
+            <h4 id="progress-stage-text" class="text-center text-primary fw-normal mb-3">Iniciando...</h4>
+            <div class="progress" role="progressbar" aria-label="Progreso de generación" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="height: 35px; font-size: 1.1rem;">
+                <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated fs-6 fw-semibold" style="width: 0%">0%</div>
+            </div>
+            {# Consola Hollywood opcional:
+            <div id="hollywood-console" class="hollywood-console-hidden mt-3"> 
+                <div class="console-header"><i class="bi bi-terminal me-2"></i>AI JETSON CORE LOG</div>
+                <pre id="console-output"></pre>
+            </div> 
+            #}
+        </div>
+        {# El div de éxito/descarga será añadido aquí por JS #}
+        <div id="error-message" class="alert alert-danger" style="display:none;" role="alert"></div>
+    </div>
+
+    {# --- Botón Final --- #}
     <div class="text-center mt-5 mb-4">
-        <button type="submit" id="submit-button" class="btn btn-lg btn-success px-5 py-3">
+        <button type="submit" id="submit-button" class="btn btn-lg btn-success px-5 py-3 shadow">
             <i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF
         </button>
     </div>
@@ -176,5 +128,5 @@
 {% endblock %}
 
 {% block scripts_extra %}
-    {# El script.js principal cargado en base_layout ya maneja la lógica de este formulario #}
+    {# script.js cargado en base_layout maneja todo #}
 {% endblock %}

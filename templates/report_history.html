@@ -9,13 +9,12 @@
 <div class="card shadow-sm">
     <div class="card-header bg-light d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Reportes Guardados</h5>
-        {# Podríamos añadir filtros o botones de exportación aquí en el futuro #}
     </div>
     <div class="card-body p-0"> 
         {% if reports %}
             <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0 align-middle small"> {# 'small' para texto más compacto #}
-                    <thead class="table-light"> {# Cabecera más clara #}
+                <table class="table table-striped table-hover mb-0 align-middle small"> 
+                    <thead class="table-light"> 
                         <tr>
                             <th scope="col" class="text-center"># Rep.</th>
                             <th scope="col">Periodo Reportado</th>
@@ -23,36 +22,19 @@
                             <th scope="col" class="text-center">Horas Mes</th>
                             <th scope="col" class="text-center">Horas Acum.</th>
                             <th scope="col" class="text-center">Generado el</th>
-                            {# Si guardaras PDFs permanentes y la ruta en DB, añadirías descarga:
-                            <th scope="col" class="text-center">Acción</th> 
-                            #}
                         </tr>
                     </thead>
                     <tbody>
                         {% for report in reports %}
                         <tr>
                             <td class="text-center fw-medium">{{ report.report_num }}</td>
-                            {# Usamos los filtros de fecha definidos en app.py #}
                             <td>{{ report.period_start | format_date_short }} al {{ report.period_end | format_date_short }}</td>
                             <td>{{ report.report_date | format_date }}</td>
                             <td class="text-center">{{ report.total_month_hours }}</td>
                             <td class="text-center">{{ report.accumulated_hours }}</td>
-                            <td class="text-center text-body-secondary"> {# Color más sutil para la fecha de generación #}
+                            <td class="text-center text-body-secondary">
                                 {{ report.generated_at.strftime('%Y-%m-%d %H:%M') if report.generated_at else 'N/D' }}
                             </td>
-                            {# 
-                            <td class="text-center">
-                                {# Asumiendo que 'pdf_stored_path' existe en el modelo ReporteMetadata #}
-                                {# {% if report.pdf_stored_path %}
-                                    <a href="{{ url_for('download_stored_pdf', report_id=report.id) }}" class="btn btn-sm btn-outline-primary py-0 px-1" title="Descargar PDF guardado">
-                                        <i class="bi bi-download"></i>
-                                    </a>
-                                {% else %}
-                                     <button class="btn btn-sm btn-outline-secondary py-0 px-1" disabled title="PDF no almacenado">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                {% endif %} #}
-                            {#</td>  #}
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -60,17 +42,12 @@
             </div>
         {% else %}
             <div class="alert alert-light mb-0 text-center border-0 py-4" role="alert"> 
-                <i class="bi bi-info-circle fs-4 me-2 align-middle"></i>No has generado y guardado ningún reporte todavía. Ve a la <a href="{{ url_for('show_input_form') }}" class="alert-link">página de registro</a> para crear el primero.
+                <i class="bi bi-info-circle fs-4 me-2 align-middle"></i>No has generado ningún reporte todavía. Ve a la <a href="{{ url_for('show_input_form') }}" class="alert-link">página de registro</a> para crear el primero.
             </div>
         {% endif %}
     </div>
      <div class="card-footer text-body-secondary small">
-        Mostrando historial de reportes guardados en la base de datos.
-        {# Nota: La descarga de los PDFs generados es temporal y ocurre justo después de la generación en la página de registro. #}
+        Mostrando historial de reportes guardados en la base de datos. La descarga de PDFs es temporal tras la generación.
      </div>
 </div>
-{% endblock %}
-
-{% block scripts_extra %}
-    {# No se necesita JS extra específico para esta página por ahora #}
 {% endblock %}

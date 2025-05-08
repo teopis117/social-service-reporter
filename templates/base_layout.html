@@ -11,24 +11,24 @@
     {# Bootstrap Icons (opcional, pero útil para iconos) #}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    {# Enlace a tu hoja de estilos personalizada (viene después de Bootstrap para poder sobrescribir) #}
+    {# Enlace a tu hoja de estilos personalizada (viene después de Bootstrap) #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     
-    {# Enlace al Favicon (icono de la pestaña del navegador) #}
+    {# Enlace al Favicon (asegúrate que exista en static/favicon.ico) #}
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     
     {# Bloque para añadir CSS extra específico de cada página hija #}
     {% block head_extra %}{% endblock %} 
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light"> {# Clase de Bootstrap para layout de footer pegajoso y fondo #}
+<body class="d-flex flex-column min-vh-100 bg-light"> {# Clases Bootstrap para layout y fondo #}
     
     {# --- BARRA DE NAVEGACIÓN --- #}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm"> {# Estilo oscuro para la navbar #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm"> 
         <div class="container">
             {# Enlace principal con logo (asegúrate que exista en static/images/) #}
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('show_input_form') }}">
                 <img src="{{ url_for('static', filename='images/logo_esit_blanco.png') }}" alt="Logo ESIT" height="40" class="d-inline-block align-text-top me-2">
-                <span class="fw-light">Generador Reportes SS</span> {# Texto del brand #}
+                <span class="fw-light">Generador Reportes SS</span> 
             </a>
             
             {# Botón hamburguesa para pantallas pequeñas #}
@@ -38,39 +38,36 @@
             
             {# Contenido colapsable de la navbar #}
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> {# ms-auto alinea a la derecha #}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> 
                     {# Enlace a la página principal de registro #}
                     <li class="nav-item">
-                        {# La clase 'active' se añade dinámicamente si estamos en esa página #}
+                        {# La clase 'active' resalta la página actual #}
                         <a class="nav-link {{ 'active' if request.endpoint == 'show_input_form' else '' }}" 
+                           aria-current="page" 
                            href="{{ url_for('show_input_form') }}"> 
                            <i class="bi bi-pencil-square me-1"></i>Registrar Horas
                         </a>
                     </li>
-                    {# --- NUEVO ENLACE A HISTORIAL --- #}
+                    {# Enlace a la página de historial #}
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'report_history' else '' }}" 
                            href="{{ url_for('report_history') }}">
                            <i class="bi bi-clock-history me-1"></i>Historial Reportes
                         </a>
                     </li>
-                    {# ------------------------------- #}
-                    
-                    {# Aquí podrías añadir enlaces a "Acerca de", "Ayuda", o Login/Logout en el futuro #}
-                    
                 </ul>
             </div>
         </div>
     </nav>
 
     {# --- CONTENIDO PRINCIPAL DE LA PÁGINA --- #}
-    {# Este bloque será reemplazado por el contenido de las plantillas hijas (input_form.html, report_history.html) #}
     <main class="container flex-grow-1 my-4">
         {# Mostrar mensajes flash (si los hubiera desde Flask) #}
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category else 'info' }} alert-dismissible fade show" role="alert">
+                    {# Usar alerta de Bootstrap para mostrar mensaje #}
+                    <div class="alert alert-{{ category if category in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'] else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -78,24 +75,24 @@
             {% endif %}
         {% endwith %}
 
-        {# El bloque de contenido principal #}
+        {# El bloque de contenido principal que las plantillas hijas llenarán #}
         {% block content %}
         {% endblock %}
     </main>
 
     {# --- PIE DE PÁGINA --- #}
-    <footer class="bg-dark text-white-50 text-center py-3 mt-auto"> {# mt-auto para footer pegajoso #}
+    <footer class="bg-dark text-white-50 text-center py-3 mt-auto"> 
         <div class="container">
-            {# Usamos el filtro 'now().year' que definimos en app.py #}
-            <p class="mb-0 small">&copy; {{ now().year }} ESIT IPN - Laboratorio de Innovación Textil con IA.</p>
+            {# Usamos el filtro 'now().year' definido en app.py #}
+            <p class="mb-0 small">&copy; {{ now().year }} ESIT IPN - Automatización de Procesos.</p>
         </div>
     </footer>
 
     {# --- SCRIPTS --- #}
-    {# Bootstrap JS Bundle (Necesario para funcionalidades como el menú hamburguesa, modales, etc.) #}
+    {# Bootstrap JS Bundle (Necesario para funcionalidades como el menú hamburguesa) #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     
-    {# Tu script JavaScript principal (lo cargamos aquí para que esté disponible en todas las páginas) #}
+    {# Tu script JavaScript principal (cargado en todas las páginas que heredan) #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     
     {# Bloque para añadir scripts JS extra específicos de cada página hija #}
