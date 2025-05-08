@@ -1,8 +1,8 @@
 Flask>=2.3.0
 Babel>=2.10.0 
-WeasyPrint>=55.0 # Añadir WeasyPrint (verifica la versión si es necesario)
-# Pillow, numpy, scikit-learn ya deberían estar si las instalaste para el otro proyecto, 
-# pero WeasyPrint podría necesitarlas indirectamente. Flask las puede necesitar.
-# Puedes añadirlas si tienes problemas:
+WeasyPrint>=55.0 
+Flask-SQLAlchemy>=3.0.0 
+# Nota: Pillow y numpy son dependencias de WeasyPrint/Flask y usualmente se instalan automáticamente.
+# Si tienes problemas, puedes añadirlos explícitamente:
 # Pillow>=9.0.0
 # numpy>=1.20.0

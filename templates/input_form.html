@@ -1,53 +1,61 @@
 {% extends "base_layout.html" %} {# Hereda de la plantilla base #}
 
 {% block content %}
+{# Cabecera de la página #}
 <header class="text-center mb-5">
-    <h1 class="display-6 fw-bold">Generador de Reporte de Servicio Social</h1>
+    <h1 class="display-6 fw-bold">{{ page_title }}</h1>
     <p class="lead text-secondary">Completa la información para generar tu reporte mensual y control de asistencia.</p>
 </header>
 
-{# El action apunta a la ruta /preview #}
-<form action="{{ url_for('generate_preview') }}" method="POST" id="report-form">
+{# Formulario principal, envía datos a la ruta /generate vía POST #}
+<form action="{{ url_for('generate_report_pdf') }}" method="POST" id="report-form">
     
-    {# Tarjeta para Información del Reporte #}
+    {# --- Tarjeta 1: Información General del Reporte --- #}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-calendar3 me-2"></i>Información del Reporte</h5>
+            <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Información del Reporte</h5>
         </div>
         <div class="card-body p-4">
             <div class="row g-3">
                 <div class="col-md-4">
                     <label for="report_num" class="form-label">Número de Reporte:</label>
-                    <input type="number" class="form-control" id="report_num" name="report_num" min="1" required>
+                    {# Campo numérico, requerido #}
+                    <input type="number" class="form-control" id="report_num" name="report_num" min="1" value="{{ data.get('report_num', '') }}" required>
                 </div>
                 <div class="col-md-4">
                     <label for="period_start" class="form-label">Inicio del Periodo:</label>
-                    <input type="date" class="form-control" id="period_start" name="period_start" required>
+                    {# Campo de fecha, requerido #}
+                    <input type="date" class="form-control" id="period_start" name="period_start" value="{{ data.get('period_start', '') }}" required>
                 </div>
                 <div class="col-md-4">
                     <label for="period_end" class="form-label">Fin del Periodo:</label>
-                    <input type="date" class="form-control" id="period_end" name="period_end" required>
+                    <input type="date" class="form-control" id="period_end" name="period_end" value="{{ data.get('period_end', '') }}" required>
                 </div>
                 <div class="col-md-6">
                     <label for="report_date_city" class="form-label">Ciudad:</label>
+                    {# Campo de texto con valor por defecto #}
                     <input type="text" class="form-control" id="report_date_city" name="report_date_city" value="{{ data.get('report_date_city', 'Ciudad de México') }}">
                 </div>
                 <div class="col-md-6">
                     <label for="report_date" class="form-label">Fecha del Reporte:</label>
+                    {# Campo de fecha con valor por defecto (hoy) #}
                     <input type="date" class="form-control" id="report_date" name="report_date" value="{{ data.get('report_date', '') }}" required>
                 </div>
                  <div class="col-md-12">
-                    <label for="previous_hours" class="form-label">Total de Horas Acumuladas (Previas a este reporte):</label>
+                    <label for="previous_hours" class="form-label">Total de Horas Acumuladas (Reportadas *antes* de este periodo):</label>
+                    {# Campo numérico para horas previas, requerido, permite decimales #}
                     <input type="number" class="form-control" id="previous_hours" name="previous_hours" min="0" step="0.1" value="{{ data.get('previous_hours', 0) }}" required>
+                    <div class="form-text">Introduce el total de horas que tenías acumuladas *antes* de iniciar el periodo de este reporte.</div>
                  </div>
             </div>
         </div>
     </div>
 
-    {# Tarjeta para Datos del Prestador #}
+    {# --- Tarjeta 2: Datos del Prestador (Estudiante) --- #}
+    {# Estos campos se precargan desde la BD o los defaults de app.py #}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-secondary text-white">
-            <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Datos del Prestador</h5>
+            <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Datos del Prestador</h5>
         </div>
         <div class="card-body p-4">
              <div class="row g-3">
@@ -57,6 +65,7 @@
                 </div>
                  <div class="col-md-6">
                     <label for="student_boleta" class="form-label">Boleta:</label>
+                    {# Campo de boleta, importante que coincida con el de la BD si quieres que cargue horas previas #}
                     <input type="text" class="form-control" id="student_boleta" name="student_boleta" value="{{ data.get('student_boleta', '') }}" required>
                 </div>
                  <div class="col-md-6">
@@ -73,16 +82,21 @@
                 </div>
                  <div class="col-md-6">
                     <label for="student_phone" class="form-label">Teléfono:</label>
+                    {# Teléfono opcional (no 'required') #}
                     <input type="tel" class="form-control" id="student_phone" name="student_phone" value="{{ data.get('student_phone', '') }}">
                 </div>
+                {# Podríamos añadir un botón 'Guardar mis datos' que haga POST a '/' aquí #}
+                {# <div class="col-12 mt-3 text-end">
+                    <button type="submit" formaction="{{ url_for('show_input_form') }}" formmethod="post" class="btn btn-sm btn-outline-secondary">Guardar mis datos</button>
+                </div> #}
             </div>
         </div>
     </div>
 
-    {# Tarjeta para Datos del Prestatario #}
+    {# --- Tarjeta 3: Datos del Prestatario y Autorización --- #}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-info text-dark">
-            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Datos del Prestatario y Autorización</h5>
+            <h5 class="mb-0"><i class="bi bi-building-check me-2"></i>Datos del Prestatario y Autorización</h5>
         </div>
         <div class="card-body p-4">
             <div class="row g-3">
@@ -102,56 +116,65 @@
         </div>
     </div>
 
-    {# Tarjeta para Actividades Realizadas #}
+    {# --- Tarjeta 4: Actividades Realizadas --- #}
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Actividades Realizadas</h5>
+            <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Actividades Realizadas</h5>
         </div>
         <div class="card-body p-4">
-            <label for="activities_description" class="form-label">Describe brevemente las actividades realizadas en el periodo:</label>
-            <textarea class="form-control" id="activities_description" name="activities_description" rows="5" required></textarea>
+            <label for="activities_description" class="form-label">Describe detalladamente las actividades realizadas en el periodo:</label>
+            {# Textarea para descripciones largas #}
+            <textarea class="form-control" id="activities_description" name="activities_description" rows="6" required></textarea>
         </div>
     </div>
 
-    {# Tarjeta para Registro de Horas Diarias #}
+    {# --- Tarjeta 5: Registro de Horas Diarias --- #}
      <div class="card shadow-sm mb-4">
         <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Registro de Horas Diarias</h5>
+            <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Registro de Horas Diarias</h5>
         </div>
         <div class="card-body p-4">
+            {# Contenedor para las filas de horas (el JS añadirá más aquí) #}
             <div id="daily-log-entries">
                 <div class="row g-3 align-items-end mb-3 daily-log-row">
-                    <div class="col-md-3 col-sm-6">
-                        <label class="form-label small">Fecha:</label>
-                        <input type="date" class="form-control form-control-sm" name="log_date[]" required>
+                    <div class="col-md-3 col-6"> {# Ajuste responsivo #}
+                        <label class="form-label small fw-medium">Fecha:</label>
+                        <input type="date" class="form-control form-control-sm" name="log_date[]" required> {# Marcado como requerido #}
                     </div>
-                    <div class="col-md-3 col-sm-6">
-                        <label class="form-label small">Hora Entrada:</label>
-                        <input type="time" class="form-control form-control-sm" name="log_start_time[]" required>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-medium">Hora Entrada:</label>
+                        <input type="time" class="form-control form-control-sm" name="log_start_time[]" required> {# Marcado como requerido #}
                     </div>
-                    <div class="col-md-3 col-sm-6">
-                        <label class="form-label small">Hora Salida:</label>
-                        <input type="time" class="form-control form-control-sm" name="log_end_time[]" required>
+                    <div class="col-md-3 col-6">
+                        <label class="form-label small fw-medium">Hora Salida:</label>
+                        <input type="time" class="form-control form-control-sm" name="log_end_time[]" required> {# Marcado como requerido #}
                     </div>
-                    <div class="col-md-3 col-sm-6 text-md-end mt-3 mt-md-0">
-                        <button type="button" class="btn btn-danger btn-sm remove-log-row" style="display: none;"><i class="bi bi-trash"></i></button>
+                    <div class="col-md-3 col-6 text-md-end mt-3 mt-md-0 d-flex justify-content-end align-items-end"> {# Alineación del botón #}
+                        {# El botón de eliminar se maneja con JS #}
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-log-row" title="Eliminar esta fila"><i class="bi bi-trash"></i></button>
                     </div>
                 </div>
+                </div>
+            {# Contenedor para el total y el botón de añadir fila #}
+            <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap">
+                 {# El span para el total se añadirá aquí por JS #}
+                 <div id="total-hours-container" class="fs-5 fw-medium text-primary">
+                     {# El JS insertará el label y el span aquí #}
+                 </div>
+                 <button type="button" id="add-log-row" class="btn btn-secondary btn-sm mt-2 mt-md-0"><i class="bi bi-plus-circle me-1"></i> Añadir Fila</button>
             </div>
-            <button type="button" id="add-log-row" class="btn btn-secondary btn-sm mt-2"><i class="bi bi-plus-circle me-1"></i> Añadir Fila</button>
         </div>
     </div>
 
-    {# Botón de Envío Final #}
+    {# --- Botón Final para Generar PDF (vía AJAX) --- #}
     <div class="text-center mt-5 mb-4">
-        <button type="submit" class="btn btn-lg btn-success px-5 py-3">
-            <i class="bi bi-eye me-2"></i>Generar Vista Previa del Reporte
+        <button type="submit" id="submit-button" class="btn btn-lg btn-success px-5 py-3">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF
         </button>
     </div>
 </form>
 {% endblock %}
 
 {% block scripts_extra %}
-    {# El script principal 'script.js' se carga desde base_layout #}
-    {# Aquí podríamos poner JS específico solo para esta página si fuera necesario #}
+    {# El script.js principal cargado en base_layout ya maneja la lógica de este formulario #}
 {% endblock %}

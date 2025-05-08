@@ -3,48 +3,102 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ page_title|default('Generador de Reportes SS') }} - ESIT IPN</title>
+    {# Título de la página, con un valor por defecto si no se especifica #}
+    <title>{{ page_title|default('Generador Reportes SS') }} - ESIT IPN</title>
+    
+    {# Bootstrap CSS desde CDN para estilos rápidos y responsivos #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    {# Bootstrap Icons (opcional, pero útil para iconos) #}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    {# Enlace a tu hoja de estilos personalizada (viene después de Bootstrap para poder sobrescribir) #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {# Enlace al Favicon (icono de la pestaña del navegador) #}
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    {% block head_extra %}{% endblock %} {/* Para añadir CSS/JS específico de la página */}
+    
+    {# Bloque para añadir CSS extra específico de cada página hija #}
+    {% block head_extra %}{% endblock %} 
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light"> {/* Fondo ligeramente gris */}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+<body class="d-flex flex-column min-vh-100 bg-light"> {# Clase de Bootstrap para layout de footer pegajoso y fondo #}
+    
+    {# --- BARRA DE NAVEGACIÓN --- #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm"> {# Estilo oscuro para la navbar #}
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('show_input_form') }}">
+            {# Enlace principal con logo (asegúrate que exista en static/images/) #}
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('show_input_form') }}">
                 <img src="{{ url_for('static', filename='images/logo_esit_blanco.png') }}" alt="Logo ESIT" height="40" class="d-inline-block align-text-top me-2">
-                Generador Reportes SS
+                <span class="fw-light">Generador Reportes SS</span> {# Texto del brand #}
             </a>
+            
+            {# Botón hamburguesa para pantallas pequeñas #}
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
+            {# Contenido colapsable de la navbar #}
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> {# ms-auto alinea a la derecha #}
+                    {# Enlace a la página principal de registro #}
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.endpoint == 'show_input_form' else '' }}" href="{{ url_for('show_input_form') }}"> <i class="bi bi-pencil-square me-1"></i>Registrar Horas</a>
+                        {# La clase 'active' se añade dinámicamente si estamos en esa página #}
+                        <a class="nav-link {{ 'active' if request.endpoint == 'show_input_form' else '' }}" 
+                           href="{{ url_for('show_input_form') }}"> 
+                           <i class="bi bi-pencil-square me-1"></i>Registrar Horas
+                        </a>
                     </li>
-                    {# Podríamos añadir un enlace a la vista previa aquí, aunque se llega desde el submit #}
-                    {# O un enlace a una futura galería #}
+                    {# --- NUEVO ENLACE A HISTORIAL --- #}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'report_history' else '' }}" 
+                           href="{{ url_for('report_history') }}">
+                           <i class="bi bi-clock-history me-1"></i>Historial Reportes
+                        </a>
+                    </li>
+                    {# ------------------------------- #}
+                    
+                    {# Aquí podrías añadir enlaces a "Acerca de", "Ayuda", o Login/Logout en el futuro #}
+                    
                 </ul>
             </div>
         </div>
     </nav>
 
+    {# --- CONTENIDO PRINCIPAL DE LA PÁGINA --- #}
+    {# Este bloque será reemplazado por el contenido de las plantillas hijas (input_form.html, report_history.html) #}
     <main class="container flex-grow-1 my-4">
+        {# Mostrar mensajes flash (si los hubiera desde Flask) #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {# El bloque de contenido principal #}
         {% block content %}
         {% endblock %}
     </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
+    {# --- PIE DE PÁGINA --- #}
+    <footer class="bg-dark text-white-50 text-center py-3 mt-auto"> {# mt-auto para footer pegajoso #}
         <div class="container">
-            <p class="mb-0 small">&copy; {{ now().year }} ESIT IPN - Automatización de Procesos.</p> {# Usar Jinja para el año actual #}
+            {# Usamos el filtro 'now().year' que definimos en app.py #}
+            <p class="mb-0 small">&copy; {{ now().year }} ESIT IPN - Laboratorio de Innovación Textil con IA.</p>
         </div>
     </footer>
 
+    {# --- SCRIPTS --- #}
+    {# Bootstrap JS Bundle (Necesario para funcionalidades como el menú hamburguesa, modales, etc.) #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    {# Tu script JavaScript principal (lo cargamos aquí para que esté disponible en todas las páginas) #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    {% block scripts_extra %}{% endblock %} {/* Para añadir JS específico de la página */}
+    
+    {# Bloque para añadir scripts JS extra específicos de cada página hija #}
+    {% block scripts_extra %}{% endblock %} 
 </body>
 </html>

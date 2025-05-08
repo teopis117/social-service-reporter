@@ -1,67 +1,84 @@
 /* static/css/style.css */
-/* Estilos generales para complementar Bootstrap */
+
+/* --- Estilos Generales y Bootstrap Overrides --- */
 body {
-    padding-top: 56px; /* Altura estándar de la navbar de Bootstrap */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background-color: #f8f9fa; /* Gris muy claro por defecto */
+    color: #212529; 
+    padding-top: 70px; /* Espacio para la navbar fija si la añadieras (fixed-top) */
   }
   
+  /* Logo en navbar oscura (ajusta si tu logo necesita inversión) */
   .navbar-brand img {
-    /* Ajusta si tu logo blanco necesita invertir colores o no */
     /* filter: brightness(0) invert(1); */ 
   }
   
-  /* Mejorar espaciado en tarjetas */
-  .card-body {
-      padding: 1.5rem; 
+  /* Contenedor principal con sombra más suave */
+  main.container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+    margin-top: 1.5rem; 
+    margin-bottom: 2rem; 
   }
   
-  /* Estilos para la tabla de logs en el formulario */
+  /* --- Estilos para input_form.html --- */
+  
+  /* Contenedor para el total de horas mensual calculado por JS */
+  #total-hours-container {
+      color: var(--bs-primary); /* Color primario de Bootstrap */
+  }
+  
+  /* Visibilidad del botón de eliminar fila de horas */
   #daily-log-entries .daily-log-row:not(:first-child) .remove-log-row {
       display: inline-block !important; 
   }
   #daily-log-entries .daily-log-row:first-child .remove-log-row {
-      display: none; /* Ocultar el botón de eliminar en la primera fila plantilla */
+      display: none; 
   }
   
-  /* ---- Estilos para la VISTA PREVIA (report_preview.html) ---- */
-  /* Mantenemos los estilos específicos para la simulación A4 aquí */
-  /* para no afectar otras páginas que puedan usar Bootstrap */
+  /* --- Estilos para report_preview.html (Simulación PDF) --- */
   
-  body.report-preview-body { /* Añadir esta clase al body en report_preview.html */
-      background-color: #ccc !important; /* Forzar sobre bg-light de base_layout */
+  /* Aplicar solo cuando se renderiza la vista previa */
+  body.report-preview-body { 
+      background-color: #dcdcdc !important; /* Fondo gris oscuro para contraste */
       margin: 0; 
-      padding: 20px 0; 
-      font-family: Arial, sans-serif; /* Fuente clásica para simular documento */
-      padding-top: 0 !important; /* Sobrescribir el padding de navbar */
+      padding: 30px 0; /* Espacio arriba/abajo para ver la sombra de página */
+      font-family: 'Times New Roman', Times, serif; /* Fuente serif clásica */
+      padding-top: 0 !important; 
   }
-  
   body.report-preview-body .navbar, 
   body.report-preview-body footer {
-      display: none; /* Ocultar navbar y footer en la vista previa */
+      display: none; /* Ocultar nav/footer */
   }
-  
-  body.report-preview-body .page-container { 
-      display: block; /* Resetear flex */
-      max-width: initial; /* Resetear max-width del container */
-      padding: 0; /* Resetear padding del container */
-      margin: 0; /* Resetear margin del container */
+  body.report-preview-body main.container {
+       max-width: none; 
+       padding: 0;
+       margin: 0;
+       background-color: transparent; /* Sin fondo blanco del container */
+       box-shadow: none; /* Sin sombra del container */
   }
-  
+  .page-container { /* Contenedor de las páginas */
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Centrar las páginas */
+  }
   .page {
       width: 210mm; 
-      min-height: 290mm; /* Ligeramente menos para evitar saltos extra */
+      min-height: 290mm; 
       padding: 15mm 18mm; 
-      margin: 1cm auto;
-      border: 1px #b0b0b0 solid;
+      margin: 1.5cm 0; /* Separación entre páginas y del borde del body */
+      border: 1px #adb5bd solid; /* Borde más visible */
       background: white;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
       box-sizing: border-box;
       font-size: 11pt; 
       line-height: 1.4;
       position: relative;
   }
-  .page + .page { 
-       margin-top: 2cm; 
-  }
+  /* ... (Estilos específicos para .header-logos, .header-text, .report-title, etc. COPIALOS de mi respuesta anterior donde detallé `report_preview.html` si no los moviste aquí antes) ... */
+  /* Asegúrate de tener los estilos para la simulación A4 aquí */
   .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cm; padding-bottom: 10px; border-bottom: 1px solid #555;}
   .header-logos img { max-height: 60px; }
   .header-text { text-align: center; font-size: 10pt; line-height: 1.2; margin-bottom: 0.5cm;}
@@ -69,48 +86,55 @@ body {
   .report-date-header { text-align: right; margin-bottom: 1cm; font-size: 10pt; }
   .report-title { text-align: center; font-weight: bold; margin-bottom: 0.5cm; font-size: 12pt;}
   .period-info { text-align: center; margin-bottom: 1cm; font-size: 10pt;}
-  .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; text-transform: uppercase; } /* Mayúsculas como en ejemplo */
+  .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; text-transform: uppercase; } 
   .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 25px; margin-bottom: 0.5cm; font-size: 10pt; } 
   .data-grid div { margin-bottom: 0.15cm; }
-  .data-grid strong { display: inline-block; min-width: 130px; font-weight: normal; } /* Etiquetas no en negrita */
+  .data-grid strong { display: inline-block; min-width: 130px; font-weight: normal; } 
   .prestatario-info { font-size: 10pt; margin-left: 5px; }
   .activities { margin-top: 0.5cm; text-align: justify; font-size: 10pt; line-height: 1.5;}
-  .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0;} /* Estilo para el <pre> de actividades */
+  .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0;} 
   .authorization { margin-top: 3cm; text-align: center; font-size: 10pt; }
   .signature-line { border-top: 1px solid black; width: 70%; margin: 0 auto 5px auto; }
-  .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; }
+  .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; } 
   .attendance-table th, .attendance-table td { border: 1px solid black; padding: 4px 5px; text-align: center; vertical-align: middle; }
   .attendance-table th { background-color: #e8e8e8; font-weight: bold; }
-  .attendance-table td { height: 20px; }
-  .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; border-left: none; border-bottom: none; border-right: none;} /* Quitar bordes en totales */
-  .attendance-table tr:last-child td:first-child, .attendance-table tr:nth-last-child(2) td:first-child { border-left: 1px solid black; } /* Borde izquierdo para la celda combinada */
-  .attendance-table tr:last-child td:nth-child(2), .attendance-table tr:nth-last-child(2) td:nth-child(2) { border-right: 1px solid black;} /* Borde derecho para celda de valor total */
+  .attendance-table td { height: 20px; } 
+  .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; border-left: none; border-bottom: none; border-right: none;}
+  .attendance-table tr:last-child td:first-child, .attendance-table tr:nth-last-child(2) td:first-child { border-left: 1px solid black; } 
+  .attendance-table tr:last-child td:nth-child(2), .attendance-table tr:nth-last-child(2) td:nth-child(2) { border-right: 1px solid black;} 
+  .seal-placeholder { border: 1px dashed #999; height: 80px; width: 150px; margin: 2cm auto 0 auto; display: flex; align-items: center; justify-content: center; color: #999; font-size: 9pt;}
   
-  .seal-placeholder { 
-      border: 1px dashed #999; 
-      height: 80px; 
-      width: 150px; 
-      margin: 2cm auto 0 auto; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      color: #999;
-      font-size: 9pt;
+  /* --- Estilos para la página de historial (report_history.html) --- */
+  .table th {
+      white-space: nowrap; /* Evitar que los encabezados de tabla se partan */
+  }
+  .table td {
+      vertical-align: middle;
   }
   
-  /* Clases para impresión (cuando generemos PDF) */
+  /* --- Estilos para Barra de Progreso y Consola Hollywood --- */
+  /* (Copia aquí los estilos de .progress-bar, .hollywood-console-*, etc. 
+     de la respuesta anterior donde implementamos Bootstrap y la barra) */
+  .progress-bar { text-align: center; color: white; font-weight: 500; overflow: visible !important; white-space: nowrap; transition: width 0.6s ease; }
+  .progress-bar.bg-success { color: white; }
+  .progress-bar.bg-danger { color: white; }
+  .hollywood-console-hidden { display: none !important; }
+  .hollywood-console-visible { display: block !important; background-color: #161b22; color: #7ee787; font-family: 'Fira Code', 'Consolas', 'Monaco', monospace; padding: 12px 18px; border-radius: 0.375rem; border: 1px solid #30363d; margin-top: 1.25rem; max-height: 200px; overflow-y: auto; font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+  .hollywood-console-visible .console-header { font-weight: 600; color: #8ab4f8; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #4a4a4a; display: flex; align-items: center; }
+  .hollywood-console-visible .console-header i { margin-right: 0.5rem; }
+  .hollywood-console-visible pre::after { content: '█'; opacity: 1; animation: blink 0.8s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 40%, 60% { opacity: 0; } }
+  
+  
+  /* Media Print (Asegura que no se imprima la navbar/footer, etc.) */
   @media print {
-      body { background-color: white !important; margin: 0; padding: 0; }
-      .page { margin: 0; border: none; box-shadow: none; border-radius: 0; width: auto; min-height: auto; padding: 15mm 18mm;}
+      body { background-color: white !important; padding-top: 0 !important; }
+      .page { margin: 0 auto; border: none; box-shadow: none; width: auto; min-height: auto;}
       .page-container { display: block;}
+      .navbar, footer, #report-form, #loading-progress-area, #error-message, .card-footer /* Ocultar elementos no deseados en PDF */ { display: none !important; }
+      main.container { margin-top: 0 !important; margin-bottom: 0 !important; padding: 0 !important;}
       .page-break-before { page-break-before: always; }
       .page-break-after { page-break-after: always; }
-      .navbar, footer { display: none !important; } /* Ocultar nav/footer al imprimir */
-  }
-  
-  /* Para que report_preview herede del body especial */
-  body.report-preview-body main.container {
-       max-width: none; /* Quitar límite de ancho */
-       padding: 0;
-       margin: 0;
+      /* Ajustar estilos específicos de impresión si es necesario */
+       a { text-decoration: none; color: inherit; } /* Evitar subrayado en enlaces */
   }
