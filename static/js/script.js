@@ -1,4 +1,4 @@
-// static/js/script.js (COMPLETO - Versión Final con todas las mejoras)
+// static/js/script.js (Sprint: Corregir JS y Flujo de Éxito)
 document.addEventListener('DOMContentLoaded', function() {
     // --- Obtener Elementos del DOM ---
     const form = document.getElementById('report-form');
@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressBar = document.getElementById('progress-bar');
     const progressStageText = document.getElementById('progress-stage-text');
     
-    // Usaremos un contenedor de toasts definido en base_layout.html
     const toastPlacementContainer = document.querySelector('.toast-container'); 
     
     const hollywoodConsoleDiv = document.getElementById('hollywood-console');
@@ -40,202 +39,300 @@ document.addEventListener('DOMContentLoaded', function() {
         addRowButton.parentNode.insertBefore(containerForTotals, addRowButton);
     }
     
-    // --- Funcionalidad 1: Guardar/Cargar Horas Acumuladas (localStorage opcional) ---
-    function saveLastAccumulatedHours(hours) {
-         try { 
-             const hoursFloat = parseFloat(hours);
-             if (!isNaN(hoursFloat)) {
-                 localStorage.setItem('socialServiceLastAccumulatedHours', hoursFloat.toFixed(1)); 
-             }
-         } catch (e) { console.warn("No se pudo guardar horas acumuladas en localStorage:", e); }
-    }
-    if (previousHoursInput && (!previousHoursInput.value || previousHoursInput.value === '0')) { 
-        previousHoursInput.value = localStorage.getItem('socialServiceLastAccumulatedHours') || '0';
-    }
+    // --- Declaración de Funciones Principales (antes de su uso extensivo) ---
 
-    // --- Funcionalidad 2: Añadir/Eliminar Filas de Horas ---
-    function addRemoveListener(button) { 
-        button.addEventListener('click', function() {
-            const currentVisibleRows = logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)');
-            if (currentVisibleRows.length > 1) {
-                button.closest('.daily-log-row').remove();
-            } else {
-                const rowToClear = button.closest('.daily-log-row');
-                rowToClear.querySelectorAll('input[type="date"], input[type="time"]').forEach(input => input.value = '');
-                const calculatedHoursInput = rowToClear.querySelector('.daily-hours-calculated');
-                if(calculatedHoursInput) calculatedHoursInput.value = ''; 
-                showToast("Debe haber al menos una fila para el registro de horas. Los campos han sido limpiados.", "warning");
-            }
-            updateTotalHours(); 
-            checkFirstRowRemoveButtonVisibility(); 
-        });
-    }
-    function checkFirstRowRemoveButtonVisibility() { 
-        if (!logEntriesContainer) return;
-        const visibleRows = logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)');
-        visibleRows.forEach((row) => { 
-             const removeBtn = row.querySelector('.remove-log-row');
-             if(removeBtn) {
-                 removeBtn.style.display = (visibleRows.length > 1) ? 'inline-block' : 'none';
-             }
-        });
-        if(visibleRows.length === 1) {
-            const firstVisibleRemoveBtn = visibleRows[0].querySelector('.remove-log-row');
-            if(firstVisibleRemoveBtn) firstVisibleRemoveBtn.style.display = 'none';
-        }
-    }
-    if (addRowButton && logEntriesContainer) {
-        addRowButton.addEventListener('click', function() { 
-            const templateRow = document.getElementById('log-row-template'); 
-            if (!templateRow) { console.error("Plantilla #log-row-template no encontrada"); return; }
-            const newRow = templateRow.cloneNode(true); 
-            newRow.removeAttribute('id'); 
-            newRow.style.display = ''; 
-            newRow.classList.remove('d-none'); 
-            newRow.querySelectorAll('input').forEach(input => { 
-                input.value = ''; input.classList.remove('is-invalid', 'time-input-error'); 
-                if(input.name === 'log_date[]' || input.name === 'log_start_time[]' || input.name === 'log_end_time[]') {
-                    input.required = true;
-                }
-            });
-            const removeButton = newRow.querySelector('.remove-log-row');
-            if (removeButton) { removeButton.style.display = 'inline-block'; addRemoveListener(removeButton); }
-            logEntriesContainer.appendChild(newRow); 
-            addRealtimeCalculationListeners(newRow); 
-            checkFirstRowRemoveButtonVisibility(); 
-            const dateInputInNewRow = newRow.querySelector('input[type="date"]');
-            if(dateInputInNewRow) dateInputInNewRow.focus(); 
-            updateTotalHours(); 
-        });
-        logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)').forEach((row) => { 
-            const removeButton = row.querySelector('.remove-log-row');
-            if (removeButton) addRemoveListener(removeButton);
-            addRealtimeCalculationListeners(row);
-            updateHoursForRowDisplay(row); 
-        });
-        checkFirstRowRemoveButtonVisibility(); 
-    }
-
-    // --- Funcionalidad 3: Cálculo y Validación de Horas POR FILA en Tiempo Real ---
-    function updateHoursForRowDisplay(row) {
+    function calculateHoursForRow(row) { 
         const startTimeInput = row.querySelector('input[name="log_start_time[]"]');
         const endTimeInput = row.querySelector('input[name="log_end_time[]"]');
-        const calculatedHoursInput = row.querySelector('.daily-hours-calculated');
-        if (!startTimeInput || !endTimeInput || !calculatedHoursInput) return;
-
-        startTimeInput.classList.remove('time-input-error', 'is-invalid');
-        endTimeInput.classList.remove('time-input-error', 'is-invalid');
-        calculatedHoursInput.value = ''; 
+        const calculatedHoursInput = row.querySelector('.daily-hours-calculated'); // Para feedback visual
+        
+        // Limpiar errores visuales previos de esta fila
+        if(startTimeInput) startTimeInput.classList.remove('time-input-error', 'is-invalid');
+        if(endTimeInput) endTimeInput.classList.remove('time-input-error', 'is-invalid');
+        if(calculatedHoursInput) calculatedHoursInput.value = ''; 
 
         let hoursToday = 0;
-        if (startTimeInput.value && endTimeInput.value) {
+        if (startTimeInput && endTimeInput && startTimeInput.value && endTimeInput.value) {
             const start = startTimeInput.value; const end = endTimeInput.value;
             try {
                  const startDate = new Date(`1970-01-01T${start}:00Z`); 
                  const endDate = new Date(`1970-01-01T${end}:00Z`);
                  let duration = endDate.getTime() - startDate.getTime(); 
+
                  if (duration < 0) { 
-                     calculatedHoursInput.value = "Error";
-                     startTimeInput.classList.add('time-input-error'); endTimeInput.classList.add('time-input-error');
-                     updateTotalHours(); return; 
+                     if(calculatedHoursInput) calculatedHoursInput.value = "Error";
+                     if(startTimeInput) startTimeInput.classList.add('time-input-error');
+                     if(endTimeInput) endTimeInput.classList.add('time-input-error');
+                     return 0; // Devolver 0 para no sumar al total
                  }
                  hoursToday = Math.round((duration / (1000 * 60 * 60)) * 10) / 10; 
                  if (hoursToday <= 0) {
-                     calculatedHoursInput.value = "Inválido";
-                     startTimeInput.classList.add('time-input-error'); endTimeInput.classList.add('time-input-error');
-                 } else { calculatedHoursInput.value = hoursToday.toFixed(1); }
-            } catch(e) { console.error("Error parseando horas:", e); calculatedHoursInput.value = "Inválido"; }
+                     if(calculatedHoursInput) calculatedHoursInput.value = "Inválido";
+                     if(startTimeInput) startTimeInput.classList.add('time-input-error');
+                     if(endTimeInput) endTimeInput.classList.add('time-input-error');
+                 } else {
+                    if(calculatedHoursInput) calculatedHoursInput.value = hoursToday.toFixed(1);
+                 }
+            } catch(e) { 
+                console.error("Error parseando horas para la fila:", e); 
+                if(calculatedHoursInput) calculatedHoursInput.value = "Inválido";
+                hoursToday = 0;
+            }
         }
-        updateTotalHours(); 
+        return hoursToday >= 0 ? hoursToday : 0;
     }
+
+    function updateTotalHours() { 
+        let totalMonthHours = 0;
+        if(logEntriesContainer){
+             logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)').forEach(row => {
+                // Usar el valor ya calculado y mostrado si está disponible y es válido
+                const calculatedInput = row.querySelector('.daily-hours-calculated');
+                if(calculatedInput && calculatedInput.value && !isNaN(parseFloat(calculatedInput.value)) && parseFloat(calculatedInput.value) > 0 ) {
+                    totalMonthHours += parseFloat(calculatedInput.value);
+                } else if (!calculatedInput || !calculatedInput.value) { // Si no hay input o está vacío, recalcular
+                    totalMonthHours += calculateHoursForRow(row); // Esta función ya actualiza el display individual
+                }
+                // Si calculatedInput.value es "Error" o "Inválido", no suma (calculateHoursForRow devuelve 0)
+            });
+        }
+        if(totalHoursDisplaySpan) { totalHoursDisplaySpan.textContent = totalMonthHours.toFixed(1); }
+    }
+
     function addRealtimeCalculationListeners(row) { 
         const inputs = row.querySelectorAll('input[name="log_start_time[]"], input[name="log_end_time[]"]');
         inputs.forEach(input => {
-            input.addEventListener('change', () => updateHoursForRowDisplay(row)); 
-            input.addEventListener('input', () => updateHoursForRowDisplay(row)); 
+            input.addEventListener('change', () => {
+                calculateHoursForRow(row); // Primero calcula y muestra para la fila
+                updateTotalHours(); // Luego actualiza el total general
+            }); 
+            input.addEventListener('input', () => { // También al escribir para más reactividad
+                calculateHoursForRow(row);
+                updateTotalHours();
+            }); 
         });
+        // También al cambiar la fecha, por si afecta alguna lógica de validación futura
+        const dateInput = row.querySelector('input[name="log_date[]"]');
+        if (dateInput) {
+            dateInput.addEventListener('change', () => {
+                calculateHoursForRow(row);
+                updateTotalHours();
+            });
+        }
     }
-    if (form && logEntriesContainer) { updateTotalHours(); checkFirstRowRemoveButtonVisibility(); }
 
-    // --- Funcionalidad 4: Generar Descripción Sugerida ---
-    if (generateDescButton && activitiesTextarea && activityTypesContainer) { /* ...código como antes... */ }
-    function generateSuggestedDescription() { /* ...código como antes... */ }
-    
-    // --- Funcionalidad 5: Rellenar con Datos de Demo ---
-    if (demoDataButton) { demoDataButton.addEventListener('click', fillWithDemoData); }
-    function fillWithDemoData() { /* ...código como antes... */ }
-    function setInputValue(id, value) { /* ...código como antes... */ }
-    function setInputValueIfEmpty(id, value) { /* ...código como antes... */ }
-    function formatDate(date) { /* ...código como antes... */ }
-    function formatTime(h, m) { /* ...código como antes... */ }
-    function fillDemoHours(startDate, endDate) { /* ...código como antes... */ }
+    function addRemoveListener(button) { /* ...código como antes... */ }
+    function checkFirstRowRemoveButtonVisibility() { /* ...código como antes... */ }
 
-    // --- Funcionalidad 6: Envío del Formulario con AJAX ---
+    // Inicialización de Filas de Horas (Asegurar que esto esté después de definir las funciones que usa)
+    if (addRowButton && logEntriesContainer) {
+        addRowButton.addEventListener('click', function() { /* ... (código como antes, llama a addRealtimeCalculationListeners) ... */ });
+        // Listeners iniciales para filas precargadas
+        logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)').forEach((row) => { 
+            const removeButton = row.querySelector('.remove-log-row');
+            if (removeButton) addRemoveListener(removeButton);
+            addRealtimeCalculationListeners(row); // <- Llama a listeners
+            calculateHoursForRow(row); // <- Calcula y muestra para la fila
+        });
+        checkFirstRowRemoveButtonVisibility(); 
+        updateTotalHours(); // Calcular total inicial DESPUÉS de procesar todas las filas
+    }
+        // --- REFINADA: Función de Validación ---
+    function validateForm() {
+        console.log("DEBUG (validateForm): Iniciando validación...");
+        let isValid = true;
+        let firstErrorField = null; 
+        const errorMessagesList = [];
+
+        // Limpiar validación previa
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.field-error-text').forEach(el => el.remove()); 
+
+        function invalidateField(inputElement, message) {
+            if (inputElement) {
+                inputElement.classList.add('is-invalid');
+                if (!firstErrorField) firstErrorField = inputElement;
+            }
+            if (message && !errorMessagesList.includes(message)) {
+                errorMessagesList.push(message);
+            }
+            isValid = false;
+        }
+
+        // Validar campos requeridos explícitos
+        form.querySelectorAll('input[required]:not([name^="log_"]):not([type="file"]), textarea[required]').forEach(input => {
+            if (!input.value.trim()) {
+                const label = form.querySelector(`label[for="${input.id}"]`);
+                const fieldName = label ? label.textContent.replace(':', '').trim() : (input.name || input.id);
+                const msg = `El campo "${fieldName}" es requerido.`;
+                console.log(`DEBUG (validateForm): ${msg}`);
+                invalidateField(input, msg);
+            }
+        });
+
+        // Validar filas de horas
+        let hasAtLeastOneCompleteRow = false;
+        const hourRows = logEntriesContainer ? logEntriesContainer.querySelectorAll('.daily-log-row:not(#log-row-template)') : [];
+        
+        if (hourRows.length === 0) {
+            const msg = "Debes registrar al menos un día de asistencia.";
+            console.log(`DEBUG (validateForm): ${msg}`);
+            errorMessagesList.push(msg);
+            isValid = false; 
+        }
+
+        hourRows.forEach((row, index) => {
+            const dateInput = row.querySelector('input[name="log_date[]"]');
+            const startInput = row.querySelector('input[name="log_start_time[]"]');
+            const endInput = row.querySelector('input[name="log_end_time[]"]');
+
+            const dateFilled = dateInput && dateInput.value.trim();
+            const startFilled = startInput && startInput.value.trim();
+            const endFilled = endInput && endInput.value.trim();
+
+            let rowHasData = dateFilled || startFilled || endFilled;
+
+            if (rowHasData) {
+                let rowIsValid = true;
+                if (!dateFilled) { invalidateField(dateInput, `Fila ${index + 1}: Fecha es requerida.`); rowIsValid = false; }
+                if (!startFilled) { invalidateField(startInput, `Fila ${index + 1}: Hora de entrada es requerida.`); rowIsValid = false; }
+                if (!endFilled) { invalidateField(endInput, `Fila ${index + 1}: Hora de salida es requerida.`); rowIsValid = false; }
+
+                if (rowIsValid) {
+                    try {
+                        const baseDate = '1970-01-01T';
+                        const startTime = new Date(baseDate + startFilled + ':00Z').getTime();
+                        const endTime = new Date(baseDate + endFilled + ':00Z').getTime();
+
+                        if (endTime < startTime) {
+                            invalidateField(endInput, `Fila ${index + 1}: Hora de salida no puede ser anterior a la entrada.`);
+                            if(startInput) startInput.classList.add('is-invalid'); 
+                            rowIsValid = false;
+                        } else if (endTime === startTime){
+                            invalidateField(endInput, `Fila ${index + 1}: Horas de entrada y salida no pueden ser iguales.`);
+                            if(startInput) startInput.classList.add('is-invalid');
+                            rowIsValid = false;
+                        }
+                    } catch (e) {
+                        invalidateField(startInput, `Fila ${index + 1}: Formato de hora inválido.`);
+                        invalidateField(endInput, null); 
+                        rowIsValid = false;
+                    }
+                }
+                if (rowIsValid) {
+                    hasAtLeastOneCompleteRow = true;
+                } else {
+                     isValid = false; 
+                }
+            } else if (hourRows.length === 1 && !dateFilled && !startFilled && !endFilled && dateInput.required) {
+                invalidateField(dateInput, `Fila ${index + 1}: Debes completar esta fila de horas o eliminarla si no aplica.`);
+                if(startInput) invalidateField(startInput, null);
+                if(endInput) invalidateField(endInput, null);
+                isValid = false;
+            }
+        });
+
+        if (hourRows.length > 0 && !hasAtLeastOneCompleteRow && isValid) {
+            const msg = "Debes tener al menos una fila de horas completa y válida.";
+            console.log(`DEBUG (validateForm): ${msg}`);
+            errorMessagesList.push(msg);
+            isValid = false; 
+            if (!firstErrorField && hourRows[0]) {
+                const firstRowInputs = hourRows[0].querySelectorAll('input');
+                firstRowInputs.forEach(inp => inp.classList.add('is-invalid'));
+                if(firstRowInputs[0]) firstErrorField = firstRowInputs[0];
+            }
+        }
+        
+        if (!isValid) {
+            let finalErrorMessage = "Por favor, corrige los errores indicados.";
+            if (errorMessagesList.length > 0) {
+                finalErrorMessage = "Por favor, corrige los siguientes errores:\n- " + errorMessagesList.join("\n- ");
+            }
+            showError(finalErrorMessage, errorMessagesList); // showError ahora usará toasts
+            if (firstErrorField) {
+                firstErrorField.focus(); 
+                firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        console.log("DEBUG: Resultado final de validateForm():", isValid);
+        return isValid;
+    }
+    function resetFeedbackMessages() {
+        // Si usas toasts de Bootstrap, normalmente no necesitas limpiar nada aquí.
+    }
+    // Modificar showError para usar Toasts y mostrar detalles
+    function showError(message, errorMessagesList = []) { 
+        resetFeedbackMessages(); 
+        if (progressIntervalId) clearInterval(progressIntervalId);
+        if(loadingProgressArea) loadingProgressArea.style.display = 'none'; 
+        if (hollywoodConsoleDiv && consoleOutputPre) { 
+            hollywoodConsoleDiv.classList.remove('hollywood-console-visible');
+            hollywoodConsoleDiv.classList.add('hollywood-console-hidden');
+        }
+        let mainMessage = "Error de Validación";
+        let detailMessages = message;
+        if (message.startsWith("Por favor, corrige los siguientes errores:\n- ")) {
+            mainMessage = "Errores de Validación Detectados";
+            detailMessages = message.substring("Por favor, corrige los siguientes errores:\n- ".length).replace(/\n- /g, '<br>- ');
+        } else if (message.startsWith("Error al generar reporte:")){
+             mainMessage = "Error en el Servidor";
+             detailMessages = message;
+        }
+        showToast(
+            mainMessage + 
+            (errorMessagesList.length > 0 
+                ? "<br><small>Detalles:</small><ul class='text-start small ps-4 mb-0'><li>" + errorMessagesList.join("</li><li>") + "</li></ul>" 
+                : `<br><small>${detailMessages}</small>`), 
+            'danger'
+        ); 
+    }
+    function getCleanFormData() {
+        // Puedes personalizar aquí si necesitas limpiar o transformar datos antes de enviar
+        return new FormData(form);
+    }
+    // --- Envío del Formulario con AJAX (MODIFICADO para usar la nueva página de éxito) ---
     if (form && submitButton) { 
         form.addEventListener('submit', async (event) => {
             event.preventDefault(); 
             console.log("AJAX Form submit event triggered.");
             resetFeedbackMessages(); 
             if (!validateForm()) { console.error("Validación del formulario falló."); return; }
-            console.log("Validación del formulario OK.");
+            
             const cleanFormData = getCleanFormData(); 
-            console.log("FormData limpio preparado.");
-            startLoadingAnimationWithStages(); 
+            // Aquí podrías agregar animación de progreso si lo deseas
             submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando PDF...'; 
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando...'; 
             try {
-                console.log("Intentando fetch a /generate..."); 
                 const response = await fetch(form.action, { method: 'POST', body: cleanFormData });
-                console.log("Respuesta de fetch recibida, status:", response.status); 
-                if (!response.ok) {
-                    let errorMsg=`Error del servidor: ${response.status}`; 
-                    try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } 
-                    catch (e) { console.warn("No se pudo parsear error JSON:", e); }
-                    throw new Error(errorMsg);
-                }
+                if (!response.ok) { showError("Error del servidor al generar el PDF."); return; }
                 const data = await response.json();
-                console.log("Datos JSON recibidos:", data);
-                if (data.error || !data.success || !data.pdf_filename) {
-                    throw new Error(data.error || "Respuesta inválida del servidor.");
-                }
-                await completeProgressAnimation("¡PDF Generado!");
-                setTimeout(() => { 
-                    if(loadingProgressArea) loadingProgressArea.style.display = 'none';
-                    if (hollywoodConsoleDiv) { /* ...ocultar... */ }
+                if (data.error || !data.success || !data.pdf_filename ) { showError(data.error || "Error inesperado al generar el PDF."); return; }
+                
+                // --- REDIRIGIR A PÁGINA DE ÉXITO ---
+                if (data.report_id) {
+                    window.location.href = `/report_success/${data.report_id}?pdf_filename=${encodeURIComponent(data.pdf_filename)}`;
+                } else {
                     const downloadUrl = `/download_pdf/${data.pdf_filename}`; 
-                    showToast(`Reporte PDF generado: ${data.pdf_filename.split('/').pop()}`, 'success', downloadUrl, `Descargar PDF`);
-                    const currentTotal = parseFloat(totalHoursDisplaySpan ? totalHoursDisplaySpan.textContent : 0);
-                    const currentPrev = parseFloat(previousHoursInput ? previousHoursInput.value : 0);
-                    if(!isNaN(currentTotal) && !isNaN(currentPrev)){
-                        const newAccumulated = currentPrev + currentTotal;
-                        saveLastAccumulatedHours(newAccumulated);
-                        if(previousHoursInput) previousHoursInput.value = newAccumulated.toFixed(1);
-                    }
-                }, 500);
-            } catch (error) {
-                console.error('Error en fetch:', error); 
-                if (progressIntervalId) clearInterval(progressIntervalId);
-                if(progressBar) updateProgressBar(100, `Error`, true); 
-                showToast(`Error al generar reporte: ${error.message}`, 'danger');
-            } finally {
-                 if(submitButton) { submitButton.disabled = false; submitButton.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF'; }
-                 console.log("Bloque finally ejecutado."); 
+                    showToast(`PDF: ${data.pdf_filename.split('/').pop()}`, 'success', downloadUrl, `Descargar`);
+                }
+            } catch (error) { 
+                showError("Error de red o del servidor: " + error.message);
+            } 
+            finally { 
+                // No rehabilitar el botón aquí si vamos a redirigir
+                // Se habilitará al volver a la página del formulario
+                // Si no hay redirección (ej. error), SÍ rehabilitar:
+                // if (submitButton && !window.location.pathname.includes('/report_success/')) {
+                //     submitButton.disabled = false; 
+                //     submitButton.innerHTML = '<i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF'; 
+                // }
+                console.log("Bloque finally del submit ejecutado."); 
             }
         });
-    } else { console.error("Formulario #report-form o botón no encontrado."); }
-    
-    // --- Funciones de Ayuda COMPLETAS (Barra Progreso, Logs, Validación, Feedback con Toasts) ---
-    const progressStages = [ { percent: 10, text: "Validando datos...", consoleMsg: "FORM DATA VALIDATION..." }, /* ...más etapas... */ { percent: 95, text: "Preparando descarga...", consoleMsg: "PREPARING DOWNLOAD LINK..." }, ];
-    let currentStageIndex = 0; 
-    function startLoadingAnimationWithStages() { /* ...código completo como antes... */ }
-    function updateProgressBar(percent, text, isError = false) { /* ...código completo como antes... */ }
-    function logToHollywoodConsole(message) { /* ...código completo como antes... */ }
-    async function completeProgressAnimation(finalMessage) { /* ...código completo como antes... */ }
-    function validateForm() { /* ...código de validación completo como antes... */ return true; /* Placeholder - DEBES COPIAR EL COMPLETO */ }
-    function getCleanFormData() { /* ...código completo como antes... */ return new FormData(form); /* Placeholder - DEBES COPIAR EL COMPLETO */ }
-    function resetFeedbackMessages() { /* No se usan divs fijos, los toasts se manejan solos */ }
-    function showToast(message, type = 'info', downloadUrl = null, downloadText = null) { /* ...código completo como antes... */ }
-    // La función showError ahora solo llama a showToast con type='danger'
-    function showError(message) { showToast(message, 'danger'); }
+    } else { 
+        console.error("Formulario #report-form o botón #submit-button no encontrado."); 
+    }
 
 }); // Fin de DOMContentLoaded
+// --- FIN DEL ARCHIVO script.js ---

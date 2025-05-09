@@ -1,0 +1,102 @@
+{% extends "base_layout.html" %} {# Heredamos de nuestra plantilla base #}
+
+{% block head_extra %}
+<style>
+    /* Estilos específicos para esta página de éxito */
+    .success-icon-xl {
+        font-size: 6rem; /* Icono grande y prominente */
+        color: var(--bs-success); /* Verde de Bootstrap para éxito */
+    }
+    .summary-card {
+        background-color: #f8f9fa; /* Fondo ligero para la tarjeta de resumen */
+        border-left: 5px solid var(--bs-primary); /* Un acento de color */
+    }
+    .summary-item {
+        font-size: 1.1rem; /* Texto del resumen un poco más grande */
+        margin-bottom: 0.75rem;
+    }
+    .summary-item strong {
+        min-width: 170px; /* Para alinear un poco las etiquetas */
+        display: inline-block;
+        color: #495057; /* Gris oscuro para etiquetas */
+    }
+    .action-buttons .btn {
+        margin: 0.5rem 0.75rem; /* Espacio entre botones */
+        min-width: 220px; /* Ancho mínimo para los botones de acción */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 pt-lg-4 pb-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            
+            {# Icono de Éxito #}
+            <div class="mb-4">
+                <i class="bi bi-check-circle-fill success-icon-xl"></i>
+            </div>
+
+            <h1 class="display-5 fw-bold mb-3">¡Reporte Generado Exitosamente!</h1>
+            
+            {# Detalles del reporte (si se pasaron desde el backend) #}
+            {% if report_details %}
+            <p class="lead text-secondary mb-4">
+                El Reporte Mensual de Actividades No. <strong class="text-dark">{{ report_details.report_num }}</strong> 
+                para el periodo del 
+                <strong class="text-dark">{{ report_details.period_start | format_date_short }}</strong> al 
+                <strong class="text-dark">{{ report_details.period_end | format_date_short }}</strong> 
+                ha sido creado y guardado en tu historial.
+            </p>
+            
+            {# Tarjeta con el Resumen del Reporte #}
+            <div class="card shadow-sm mb-4 summary-card">
+                <div class="card-body text-start p-4">
+                    <h5 class="card-title mb-3 text-center text-primary"><i class="bi bi-file-earmark-text me-2"></i>Resumen del Reporte Generado</h5>
+                    <div class="summary-item"><strong><i class="bi bi-person-fill me-2 text-muted"></i>Prestador:</strong> {{ report_details.prestador.nombre }}</div>
+                    <div class="summary-item"><strong><i class="bi bi-card-heading me-2 text-muted"></i>Boleta:</strong> {{ report_details.prestador_boleta }}</div>
+                    <div class="summary-item"><strong><i class="bi bi-hash me-2 text-muted"></i>No. Reporte:</strong> {{ report_details.report_num }}</div>
+                    <div class="summary-item"><strong><i class="bi bi-calendar-check me-2 text-muted"></i>Fecha Reporte:</strong> {{ report_details.report_date | format_date }}</div>
+                    <div class="summary-item"><strong><i class="bi bi-hourglass-split me-2 text-muted"></i>Horas del Mes:</strong> {{ report_details.total_month_hours }}</div>
+                    <div class="summary-item"><strong><i class="bi bi-bar-chart-line-fill me-2 text-muted"></i>Horas Acumuladas:</strong> {{ report_details.accumulated_hours }}</div>
+                </div>
+            </div>
+
+            {# Botón de Descarga del PDF #}
+            {# 'pdf_download_path' se construye en la ruta /report_success y se pasa aquí #}
+            {% if pdf_download_path %}
+            <a href="{{ pdf_download_path }}" class="btn btn-success btn-lg px-5 py-3 mb-3 shadow-sm d-block w-75 mx-auto" download>
+                <i class="bi bi-file-earmark-arrow-down-fill me-2"></i>Descargar PDF (Reporte No. {{ report_details.report_num }})
+            </a>
+            {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>El enlace de descarga para este PDF no está disponible. Es posible que ya lo hayas descargado. Puedes buscarlo en tu historial o generar uno nuevo.
+            </div>
+            {% endif %}
+
+            {% else %}
+            {# Fallback si no se cargan los detalles del reporte #}
+            <p class="lead text-secondary mb-4">El reporte ha sido procesado y guardado en el historial.</p>
+            <p class="text-warning">No se pudieron cargar los detalles específicos del reporte para este resumen.</p>
+            {% endif %}
+
+            <hr class="my-4">
+
+            <h5 class="fw-normal mb-3">¿Qué deseas hacer ahora?</h5>
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center action-buttons">
+                <a href="{{ url_for('reporter.show_input_form') }}" class="btn btn-primary btn-lg px-4">
+                    <i class="bi bi-file-earmark-plus me-1"></i>Generar Nuevo Reporte
+                </a>
+                <a href="{{ url_for('reporter.report_history') }}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-list-ul me-1"></i>Ver Historial Completo
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+{# No se necesita JS específico para esta página por ahora #}
+{% endblock %}
