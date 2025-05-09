@@ -1,101 +1,162 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    {# Título de la página, con un valor por defecto si no se especifica #}
-    <title>{{ page_title|default('Generador Reportes SS') }} - ESIT IPN</title>
-    
-    {# Bootstrap CSS desde CDN para estilos rápidos y responsivos #}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    {# Bootstrap Icons (opcional, pero útil para iconos) #}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
-    {# Enlace a tu hoja de estilos personalizada (viene después de Bootstrap) #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
-    {# Enlace al Favicon (asegúrate que exista en static/favicon.ico) #}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Servicio Social - {{ data.student_name }} - No {{ data.report_num }}</title>
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    
-    {# Bloque para añadir CSS extra específico de cada página hija #}
-    {% block head_extra %}{% endblock %} 
+    <style>
+        @page { 
+            size: A4; 
+            margin: 15mm 18mm;
+        }
+        html { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.3; color: #000; }
+        body { margin: 0; padding: 0; }
+        .page { page-break-after: always; }
+        .page:last-child { page-break-after: avoid; }
+        .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cm; padding-bottom: 10px; border-bottom: 1px solid #555;}
+        .header-logos img { max-height: 60px; display: block;}
+        .header-text { text-align: center; font-size: 10pt; line-height: 1.2; margin-bottom: 0.5cm;}
+        .header-text strong { font-size: 11pt; }
+        .report-date-header { text-align: right; margin-bottom: 1cm; font-size: 10pt; }
+        .report-title { text-align: center; font-weight: bold; margin-bottom: 0.5cm; font-size: 12pt;}
+        .period-info { text-align: center; margin-bottom: 1cm; font-size: 10pt;}
+        .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; text-transform: uppercase; } 
+        .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 25px; margin-bottom: 0.5cm; font-size: 10pt; } 
+        .data-grid div { margin-bottom: 0.15cm; }
+        .data-grid strong { display: inline-block; min-width: 130px; font-weight: normal; } 
+        .prestatario-info { font-size: 10pt; margin-left: 5px; }
+        .activities { margin-top: 0.5cm; text-align: justify; font-size: 10pt; line-height: 1.5;}
+        .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0;} 
+        .authorization { margin-top: 3cm; text-align: center; font-size: 10pt; }
+        .signature-line { border-top: 1px solid black; width: 70%; margin: 0 auto 5px auto; }
+        .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; } 
+        .attendance-table th, .attendance-table td { border: 1px solid black; padding: 4px 5px; text-align: center; vertical-align: middle; }
+        .attendance-table th { background-color: #e8e8e8; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .attendance-table td { height: 20px; } 
+        .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; border-left: none; border-bottom: none; border-right: none;}
+        .attendance-table tr:last-child td:first-child, .attendance-table tr:nth-last-child(2) td:first-child { border-left: 1px solid black; } 
+        .attendance-table tr:last-child td:nth-child(2), .attendance-table tr:nth-last-child(2) td:nth-child(2) { border-right: 1px solid black;}
+        .seal-placeholder { border: 1px dashed #999; height: 80px; width: 150px; margin: 2cm auto 0 auto; display: flex; align-items: center; justify-content: center; color: #999; font-size: 9pt;}
+        .page-break-before { page-break-before: always; }
+    </style>
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light"> {# Clases Bootstrap para layout y fondo #}
-    
-    {# --- BARRA DE NAVEGACIÓN --- #}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm"> 
-        <div class="container">
-            {# Enlace principal con logo (asegúrate que exista en static/images/) #}
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('show_input_form') }}">
-                <img src="{{ url_for('static', filename='images/logo_esit_blanco.png') }}" alt="Logo ESIT" height="40" class="d-inline-block align-text-top me-2">
-                <span class="fw-light">Generador Reportes SS</span> 
-            </a>
-            
-            {# Botón hamburguesa para pantallas pequeñas #}
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            {# Contenido colapsable de la navbar #}
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> 
-                    {# Enlace a la página principal de registro #}
-                    <li class="nav-item">
-                        {# La clase 'active' resalta la página actual #}
-                        <a class="nav-link {{ 'active' if request.endpoint == 'show_input_form' else '' }}" 
-                           aria-current="page" 
-                           href="{{ url_for('show_input_form') }}"> 
-                           <i class="bi bi-pencil-square me-1"></i>Registrar Horas
-                        </a>
-                    </li>
-                    {# Enlace a la página de historial #}
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.endpoint == 'report_history' else '' }}" 
-                           href="{{ url_for('report_history') }}">
-                           <i class="bi bi-clock-history me-1"></i>Historial Reportes
-                        </a>
-                    </li>
-                </ul>
+<body class="report-preview-body">
+<div class="page-container">
+    <!-- --- PÁGINA 1: REPORTE DE ACTIVIDADES --- -->
+    <div class="page">
+        <div class="header-logos">
+            <img src="{{ url_for('static', filename='images/logo_ipn.png') }}" alt="Logo IPN"> 
+            <img src="{{ url_for('static', filename='images/logo_escom.png') }}" alt="Logo ESCOM">
+        </div>
+        <div class="header-text">
+            <strong>Instituto Politécnico Nacional</strong><br>
+            ESCUELA SUPERIOR DE CÓMPUTO<br>
+            SUBDIRECCIÓN DE SERVICIOS EDUCATIVOS E INTEGRACIÓN SOCIAL<br>
+            Departamento de Extensión y Apoyos Educativos.
+        </div>
+        <div class="report-date-header">
+            {{ data.report_date_city }}, a {{ data.report_date | format_date }}
+        </div>
+        <div class="report-title">
+            REPORTE MENSUAL DE ACTIVIDADES No. {{ data.report_num }}
+        </div>
+        <div class="period-info">
+            Correspondiente al periodo del {{ data.period_start | format_date }} al {{ data.period_end | format_date }}
+        </div>
+        <div class="section-title">Datos del Prestador</div>
+        <div class="data-grid">
+            <div><strong>Nombre:</strong> {{ data.student_name }}</div>
+            <div><strong>Programa Académico:</strong> {{ data.student_program }}</div>
+            <div><strong>Boleta:</strong> {{ data.student_boleta }}</div>
+            <div><strong>Teléfono Particular:</strong> {{ data.student_phone }}</div>
+            <div><strong>Semestre:</strong> {{ data.student_semester }}</div>
+            <div>&nbsp;</div>
+            <div style="grid-column: 1 / -1;"><strong>Correo electrónico:</strong> {{ data.student_email }}</div>
+        </div>
+        <div class="section-title">Prestatario</div>
+        <div class="prestatario-info">{{ data.prestatario_name }}</div>
+        <div class="section-title">Actividades Realizadas.</div>
+        <div class="activities">
+            <pre>{{ data.activities_description }}</pre> 
+        </div>
+        <div class="authorization">
+            Autorizó
+            <div style="margin-top: 1.5cm;">
+                <div class="signature-line"></div>
+                {{ data.authorizing_name }}<br>
+                {{ data.authorizing_title }}
             </div>
         </div>
-    </nav>
+        <div class="seal-placeholder">Sello de Prestatario</div>
+    </div>
 
-    {# --- CONTENIDO PRINCIPAL DE LA PÁGINA --- #}
-    <main class="container flex-grow-1 my-4">
-        {# Mostrar mensajes flash (si los hubiera desde Flask) #}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {# Usar alerta de Bootstrap para mostrar mensaje #}
-                    <div class="alert alert-{{ category if category in ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark'] else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        {# El bloque de contenido principal que las plantillas hijas llenarán #}
-        {% block content %}
-        {% endblock %}
-    </main>
-
-    {# --- PIE DE PÁGINA --- #}
-    <footer class="bg-dark text-white-50 text-center py-3 mt-auto"> 
-        <div class="container">
-            {# Usamos el filtro 'now().year' definido en app.py #}
-            <p class="mb-0 small">&copy; {{ now().year }} ESIT IPN - Automatización de Procesos.</p>
+    <!-- --- PÁGINA 2: CONTROL DE ASISTENCIA --- -->
+    <div class="page page-break-before"> 
+         <div class="header-logos">
+             <img src="{{ url_for('static', filename='images/logo_ipn.png') }}" alt="Logo IPN"> 
+             <img src="{{ url_for('static', filename='images/logo_escom.png') }}" alt="Logo ESCOM"> 
         </div>
-    </footer>
+         <div class="header-text">
+            <strong>Instituto Politécnico Nacional</strong><br>ESCUELA SUPERIOR DE CÓMPUTO<br>SUBDIRECCIÓN DE SERVICIOS EDUCATIVOS E INTEGRACIÓN SOCIAL<br>Departamento de Extensión y Apoyos Educativos.
+        </div>
+        <div class="report-title">CONTROL DE ASISTENCIA</div>
+         <div class="period-info">
+            Correspondiente al reporte mensual de actividades No. {{ data.report_num }}<br>
+            Periodo del {{ data.period_start | format_date }} al {{ data.period_end | format_date }}
+        </div>
+        <div class="data-grid" style="margin-bottom: 1cm;"> 
+             <div style="grid-column: 1 / -1;"><strong>Nombre del prestador:</strong> {{ data.student_name }}</div>
+             <div style="grid-column: 1 / -1;"><strong>Programa Académico:</strong> {{ data.student_program }}</div>
+             <div style="grid-column: 1 / -1;"><strong>Boleta:</strong> {{ data.student_boleta }}</div>
+        </div>
+        <table class="attendance-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">No.</th> <th style="width: 25%;">FECHA</th> <th style="width: 15%;">HORA DE ENTRADA</th> <th style="width: 15%;">HORA DE SALIDA</th> <th style="width: 15%;">HORAS POR DÍA</th> <th style="width: 25%;">FIRMA</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set row_count = data.daily_logs | length %}
+                {% for log in data.daily_logs %}
+                <tr>
+                    <td>{{ loop.index }}</td> <td>{{ log.date | format_date_short }}</td> <td>{{ log.start_time }}</td> <td>{{ log.end_time }}</td> <td>{{ log.hours_today if log.hours_today > 0 else '' }}</td> <td></td> 
+                </tr>
+                {% endfor %}
+                {% for i in range(row_count + 1, 25) %}
+                 <tr><td>{{ i }}</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                 {% endfor %}
+                 <tr>
+                     <td colspan="4" style="text-align: right; font-weight: bold; border-left: none; border-bottom: none;">TOTAL DE HORAS PRESTADAS POR MES</td>
+                     <td style="font-weight: bold;">{{ data.total_month_hours }}</td>
+                     <td style="border-right: none; border-bottom: none;"></td>
+                 </tr>
+                 <tr>
+                     <td colspan="4" style="text-align: right; font-weight: bold; border-left: none; border-bottom: none;">TOTAL DE HORAS PRESTADAS ACUMULADAS</td>
+                     <td style="font-weight: bold;">{{ data.accumulated_hours }}</td>
+                     <td style="border-right: none; border-bottom: none;"></td>
+                 </tr>
+            </tbody>
+        </table>
+        <div class="authorization">
+            Autorizó
+            <div style="margin-top: 1.5cm;">
+                <div class="signature-line"></div> {{ data.authorizing_name }}<br> {{ data.authorizing_title }}
+            </div>
+        </div>
+         <div class="seal-placeholder">Sello de Prestatario</div>
+    </div>
+</div> 
+
+    {# --- CONTENEDOR PARA NOTIFICACIONES TOAST --- #}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        {# Los toasts se añadirán aquí dinámicamente por JavaScript #}
+    </div>
+    {# --- FIN CONTENEDOR TOAST --- #}
 
     {# --- SCRIPTS --- #}
-    {# Bootstrap JS Bundle (Necesario para funcionalidades como el menú hamburguesa) #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    
-    {# Tu script JavaScript principal (cargado en todas las páginas que heredan) #}
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    
-    {# Bloque para añadir scripts JS extra específicos de cada página hija #}
     {% block scripts_extra %}{% endblock %} 
 </body>
 </html>

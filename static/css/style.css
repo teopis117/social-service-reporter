@@ -2,137 +2,159 @@
 
 /* --- Estilos Generales y Bootstrap Overrides --- */
 body {
-    font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; 
-    background-color: #f4f6f9; /* Gris muy claro */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background-color: #f0f2f5; /* Un gris azulado muy claro y moderno */
     color: #212529; 
-    /* Padding top para compensar la navbar si fuera fija */
-    /* padding-top: 70px; */ 
+    padding-top: 70px; /* Espacio para la navbar si usaras 'fixed-top' en ella */
   }
   
-  /* Logo en navbar oscura (si es oscuro, invierte colores para que sea blanco) */
+  /* Logo en navbar oscura (ajusta si tu logo necesita inversión) */
   .navbar-brand img {
-    /* filter: brightness(0) invert(1); */ /* Descomenta si tu logo es oscuro */
+    /* filter: brightness(0) invert(1); */ /* Descomenta si tu logo es oscuro y la navbar es oscura */
   }
   
-  /* Ajustes al contenedor principal */
   main.container {
     background-color: #ffffff;
     padding: 2rem;
     border-radius: 0.5rem;
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.07); /* Sombra suave */
-    margin-top: 1.5rem; 
-    margin-bottom: 2rem; 
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.07); 
+    margin-top: 1.5rem !important; /* Asegurar margen superior */
+    margin-bottom: 2rem !important; 
   }
   
   header .lead {
     color: #5a7184; 
-    font-size: 1.1rem; 
+    font-size: 1.15rem; 
+    margin-bottom: 2rem !important;
   }
   
   .card {
     border: 1px solid #dee2e6; /* Borde sutil para las tarjetas */
   }
   .card-header {
-      font-weight: 500; /* Ligeramente más grueso el texto del header */
+      font-weight: 500; 
   }
   
   /* --- Estilos para input_form.html --- */
   
-  /* Contenedor para el total de horas mensual */
-  #total-hours-live-container {
+  /* Contenedor para el total de horas mensual calculado por JS */
+  #total-hours-live-container { 
       color: var(--bs-primary); 
-      margin-top: 1rem; /* Espacio extra arriba */
+      margin-top: 1rem; 
   }
   
   /* Visibilidad botón eliminar fila de horas */
-  #daily-log-entries .daily-log-row:not(:first-child) .remove-log-row {
+  #daily-log-entries .daily-log-row:not(#log-row-template):not(:first-child) .remove-log-row {
       display: inline-block !important; 
   }
-  #daily-log-entries .daily-log-row:first-child .remove-log-row {
-      display: none; 
+  /* Ocultar el botón de eliminar en la primera fila visible si es la única */
+  #daily-log-entries .daily-log-row:not(#log-row-template):first-child .remove-log-row {
+      /* El JS se encarga de mostrarlo si se añade otra fila */
+      display: none;  
   }
-  /* Evitar que el botón de eliminar se haga muy pequeño en móviles */
   .remove-log-row {
-      padding: 0.25rem 0.5rem; /* Ajustar padding si es necesario */
-      line-height: 1; /* Ajustar altura de línea */
+      padding: 0.3rem 0.6rem; 
+      line-height: 1.2; 
   }
   @media (max-width: 767.98px) {
-    .remove-log-row i { font-size: 0.9rem; } /* Icono más pequeño en móvil */
+    .remove-log-row i { font-size: 0.9rem; } 
   }
-  
+  #fill-demo-data { font-size: 0.85rem; }
+  #activity-types-selection .form-check-inline { margin-right: 1rem; margin-bottom: 0.5rem; } /* Espacio también abajo */
   
   /* --- Estilos para report_preview.html (Simulación PDF) --- */
+  /* Estos estilos se aplican cuando el body tiene la clase 'report-preview-body' */
   
   body.report-preview-body { 
-      background-color: #dcdcdc !important; 
+      background-color: #dcdcdc !important; /* Fondo gris oscuro para contraste */
       margin: 0; 
-      padding: 30px 0; 
+      padding: 30px 0; /* Espacio arriba/abajo para ver la sombra de página */
       font-family: 'Times New Roman', Times, serif; /* Fuente clásica para simular documento */
-      padding-top: 0 !important; 
+      padding-top: 0 !important; /* Sobrescribir el padding de navbar si es necesario */
+      color: #000000; /* Texto negro por defecto para el reporte */
   }
+  /* Ocultar elementos de navegación en la vista previa del reporte */
   body.report-preview-body .navbar, 
   body.report-preview-body footer {
-      display: none; /* Ocultar nav/footer en la vista previa */
+      display: none; 
   }
+  /* Ajustar el contenedor principal en la vista previa */
   body.report-preview-body main.container {
-       max-width: none; 
-       padding: 0; margin: 0;
-       background-color: transparent; box-shadow: none; 
+       max-width: none !important; /* Quitar restricción de ancho */
+       padding: 0 !important; margin: 0 !important;
+       background-color: transparent !important; box-shadow: none !important; 
        margin-top: 0 !important; margin-bottom: 0 !important;
   }
-  .page-container { 
+  .page-container { /* Contenedor de las páginas simuladas */
       display: flex;
       flex-direction: column;
       align-items: center; 
   }
-  .page {
+  .page { /* Estilo de cada página simulada */
       width: 210mm; 
-      min-height: 290mm; 
-      padding: 15mm 18mm; 
-      margin: 1.5cm 0; 
+      min-height: 290mm; /* Alto A4 (puede ser un poco menos para evitar saltos de página inesperados) */
+      padding: 15mm 18mm 15mm 18mm; /* Márgenes: Arriba, Derecha, Abajo, Izquierda */
+      margin: 1.5cm 0; /* Margen vertical entre páginas simuladas y del borde del body */
       border: 1px #b0b0b0 solid;
       background: white;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.25);
-      box-sizing: border-box;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.25); /* Sombra para efecto de papel */
+      box-sizing: border-box; /* Importante para que el padding no aumente el tamaño */
       font-size: 11pt; 
       line-height: 1.4;
-      position: relative;
+      position: relative; /* Para elementos posicionados absolutamente si los hubiera */
   }
-  .page + .page { margin-top: 2cm; } /* Espacio entre páginas simuladas */
+  .page + .page { margin-top: 2cm; } /* Espacio entre páginas simuladas si hay más de una */
   
   /* Estilos específicos de elementos dentro de .page (simulando el PDF) */
-  .header-logos { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1cm; padding-bottom: 10px; border-bottom: 1px solid #555;}
-  .header-logos img { max-height: 60px; }
-  .header-text { text-align: center; font-size: 10pt; line-height: 1.2; margin-bottom: 0.5cm;}
-  .header-text strong { font-size: 11pt; }
-  .report-date-header { text-align: right; margin-bottom: 1cm; font-size: 10pt; }
-  .report-title { text-align: center; font-weight: bold; margin-bottom: 0.5cm; font-size: 12pt;}
-  .period-info { text-align: center; margin-bottom: 1cm; font-size: 10pt;}
-  .section-title { font-weight: bold; margin-top: 0.8cm; margin-bottom: 0.3cm; font-size: 11pt; text-transform: uppercase; } 
-  .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 25px; margin-bottom: 0.5cm; font-size: 10pt; } 
-  .data-grid div { margin-bottom: 0.15cm; }
-  .data-grid strong { display: inline-block; min-width: 130px; font-weight: normal; } 
-  .prestatario-info { font-size: 10pt; margin-left: 5px; }
-  .activities { margin-top: 0.5cm; text-align: justify; font-size: 10pt; line-height: 1.5;}
-  .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0;} /* Para mantener formato de textarea */
-  .authorization { margin-top: 3cm; text-align: center; font-size: 10pt; }
-  .signature-line { border-top: 1px solid black; width: 70%; margin: 0 auto 5px auto; }
-  .attendance-table { width: 100%; border-collapse: collapse; margin-top: 1cm; font-size: 9pt; } 
-  .attendance-table th, .attendance-table td { border: 1px solid black; padding: 4px 5px; text-align: center; vertical-align: middle; }
-  .attendance-table th { background-color: #e8e8e8; font-weight: bold; }
-  .attendance-table td { height: 20px; } 
-  .attendance-table tr:last-child td, .attendance-table tr:nth-last-child(2) td { font-weight: bold; border-left: none; border-bottom: none; border-right: none;}
-  .attendance-table tr:last-child td:first-child, .attendance-table tr:nth-last-child(2) td:first-child { border-left: 1px solid black; } 
-  .attendance-table tr:last-child td:nth-child(2), .attendance-table tr:nth-last-child(2) td:nth-child(2) { border-right: 1px solid black;} 
-  .seal-placeholder { border: 1px dashed #999; height: 80px; width: 150px; margin: 2cm auto 0 auto; display: flex; align-items: center; justify-content: center; color: #999; font-size: 9pt;}
+  .header-logos { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8cm; padding-bottom: 8px; border-bottom: 1.5px solid #000000;}
+  .header-logos img { max-height: 55px; display: block;}
+  .header-text { text-align: center; font-size: 10pt; line-height: 1.25; margin-bottom: 0.5cm;}
+  .header-text strong { font-size: 10.5pt; }
+  .report-date-header { text-align: right; margin-bottom: 0.8cm; font-size: 10pt; }
+  .report-title { text-align: center; font-weight: bold; margin-bottom: 0.4cm; font-size: 11.5pt;}
+  .period-info { text-align: center; margin-bottom: 0.8cm; font-size: 10pt;}
+  .section-title { font-weight: bold; margin-top: 0.7cm; margin-bottom: 0.25cm; font-size: 11pt; text-transform: uppercase; } 
+  .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px 20px; margin-bottom: 0.4cm; font-size: 10pt; } 
+  .data-grid div { margin-bottom: 0.1cm; }
+  .data-grid strong { display: inline-block; min-width: 120px; font-weight: normal; } 
+  .prestatario-info { font-size: 10pt; margin-left: 0; margin-bottom: 0.5cm;}
+  .activities { margin-top: 0.3cm; text-align: justify; font-size: 10pt; line-height: 1.4;}
+  .activities pre { white-space: pre-wrap; font-family: inherit; margin: 0; padding: 0; border: none; background-color: transparent;} 
+  .authorization { margin-top: 2.5cm; text-align: center; font-size: 10pt; }
+  .signature-line { border-top: 1px solid black; width: 65%; margin: 0 auto 4px auto; }
+  .attendance-table { width: 100%; border-collapse: collapse; margin-top: 0.8cm; font-size: 9pt; } 
+  .attendance-table th, .attendance-table td { border: 1px solid black; padding: 3px 4px; text-align: center; vertical-align: middle; }
+  .attendance-table th { background-color: #E8E8E8; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+  .attendance-table td { height: 18px; } 
+  /* Estilos para las filas de totales en la tabla de asistencia */
+  .attendance-table tr.total-row td { 
+      font-weight: bold; 
+      border-left-width: 0; 
+      border-right-width: 0;
+      border-bottom-width: 0; /* Sin borde inferior en celdas de totales */
+  }
+  .attendance-table tr.total-row td:first-child {
+      border-left-width: 1px; /* Borde izquierdo para la celda de etiqueta del total */
+  }
+   .attendance-table tr.total-row td:nth-child(5) { /* Columna de valor total de horas */
+       border-right-width: 1px;
+   }
+  /* Asegurar borde inferior para la última fila de la tabla (que sería la de acumulados) */
+   .attendance-table tr:last-child td {
+       border-bottom-width: 1px;
+   }
+  .seal-placeholder { border: 1px dashed #aaaaaa; height: 70px; width: 140px; margin: 1.5cm auto 0 auto; display: flex; align-items: center; justify-content: center; color: #aaaaaa; font-size: 9pt;}
   
   /* --- Estilos para página de historial (report_history.html) --- */
-  .table th { white-space: nowrap; }
-  .table td { vertical-align: middle; }
+  .table th { white-space: nowrap; } /* Evitar que los encabezados de tabla se partan */
+  .table td { vertical-align: middle; } /* Alinear verticalmente el contenido de las celdas */
   
   /* --- Estilos para Barra de Progreso y Consola Hollywood --- */
-  .progress[role="progressbar"] { background-color: #e9ecef; }
-  #progress-bar { transition: width 0.4s ease; text-shadow: 1px 1px 1px rgba(0,0,0,0.2); }
+  .progress[role="progressbar"] { background-color: #e9ecef; /* Fondo más claro para la barra */ }
+  #progress-bar { 
+      transition: width 0.4s ease; /* Transición suave para el ancho */
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.2); /* Sombra para el texto dentro de la barra */
+  }
   .hollywood-console-hidden { display: none !important; }
   .hollywood-console-visible { display: block !important; background-color: #161b22; color: #61e668; font-family: 'Fira Code', 'Consolas', 'Monaco', monospace; padding: 12px 18px; border-radius: 0.375rem; border: 1px solid #30363d; margin-top: 1.25rem; max-height: 200px; overflow-y: auto; font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
   .hollywood-console-visible .console-header { font-weight: 600; color: #8ab4f8; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px dashed #4a4a4a; display: flex; align-items: center; }
@@ -140,17 +162,63 @@ body {
   .hollywood-console-visible pre::after { content: '█'; opacity: 1; animation: blink 0.8s infinite; }
   @keyframes blink { 0%, 100% { opacity: 1; } 40%, 60% { opacity: 0; } }
   
-  /* --- Estilos para Impresión (Afinando los de report_preview) --- */
+  
+  /* --- Estilos para Impresión (Importante para WeasyPrint) --- */
   @media print {
-      body { background-color: white !important; padding-top: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } /* Forzar colores de fondo en impresión */
-      .page { margin: 0 auto; border: none; box-shadow: none; width: 100%; min-height: 270mm; /* Ajustar ligeramente si es necesario */ padding: 0; page-break-after: always; } /* Salto de página después de cada .page */
-      .page:last-child { page-break-after: avoid; } /* Evitar salto después de la última */
-      .page-container { display: block; }
-      .navbar, footer, form#report-form, #loading-progress-area, .alert, .btn /* Ocultar elementos no imprimibles */ { display: none !important; } 
-      main.container { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+      body { 
+          background-color: white !important; 
+          padding-top: 0 !important; 
+          -webkit-print-color-adjust: exact; /* Forzar colores de fondo en impresión para Chrome/WebKit */
+          print-color-adjust: exact; /* Estándar para forzar colores de fondo */
+      } 
+      .page { 
+          margin: 0 auto; /* Centrar página en impresión */
+          border: none; 
+          box-shadow: none; 
+          width: 100%; /* Usar ancho completo dentro de los márgenes de @page */
+          min-height: auto; /* WeasyPrint maneja la altura de la página */
+          padding: 0; /* El padding ya está en @page margin */
+          page-break-after: always; /* Cada .page es una nueva página en PDF */
+      } 
+      .page:last-child { 
+          page-break-after: avoid; /* Evitar salto después de la última página */
+      } 
+      .page-container { 
+          display: block; /* Quitar flex en impresión */
+      }
+      /* Ocultar elementos no deseados en el PDF final */
+      .navbar, 
+      footer, 
+      form#report-form, 
+      #loading-progress-area, 
+      .alert, /* Ocultar alertas de Bootstrap */
+      #fill-demo-data, /* Ocultar botón de demo */
+      #add-log-row, /* Ocultar botón de añadir fila */
+      #total-hours-live-container, /* Ocultar total de horas en vivo del form */
+      #generate-description /* Ocultar botón de sugerir descripción */
+      { 
+          display: none !important; 
+      } 
+      main.container { 
+          margin: 0 !important; padding: 0 !important; 
+          max-width: none !important; 
+          background-color: transparent !important; 
+          box-shadow: none !important; 
+      }
+      /* Control de saltos de página (útil para WeasyPrint) */
       .page-break-before { page-break-before: always; }
       .page-break-after { page-break-after: always; }
-      a { text-decoration: none; color: inherit; } 
-      /* Ajustar márgenes específicos de impresión si es necesario */
-      @page { margin: 15mm 18mm; /* Márgenes de la impresora */ } 
+      
+      a { text-decoration: none; color: inherit; } /* Evitar subrayado y colores de enlace en PDF */
+      
+      /* Márgenes de la impresora para el PDF (WeasyPrint los toma de @page) */
+      @page { 
+          margin: 15mm 18mm 15mm 18mm; /* Márgenes: Arriba, Derecha, Abajo, Izquierda */
+          /* Ejemplo de pie de página con número de página:
+          @bottom-right {
+              content: "Página " counter(page) " de " counter(pages);
+              font-size: 9pt;
+              color: #333333;
+          } */
+      } 
   }

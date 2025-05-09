@@ -42,12 +42,12 @@
             </div>
         {% else %}
             <div class="alert alert-light mb-0 text-center border-0 py-4" role="alert"> 
-                <i class="bi bi-info-circle fs-4 me-2 align-middle"></i>No has generado ningún reporte todavía. Ve a la <a href="{{ url_for('show_input_form') }}" class="alert-link">página de registro</a> para crear el primero.
+                <i class="bi bi-info-circle fs-4 me-2 align-middle"></i>No has generado ningún reporte todavía. Ve a la <a href="{{ url_for('reporter.show_input_form') }}" class="alert-link">página de registro</a> para crear el primero.
             </div>
         {% endif %}
     </div>
      <div class="card-footer text-body-secondary small">
-        Mostrando historial de reportes guardados en la base de datos. La descarga de PDFs es temporal tras la generación.
+        Mostrando historial de reportes guardados en la base de datos.
      </div>
 </div>
 {% endblock %}
